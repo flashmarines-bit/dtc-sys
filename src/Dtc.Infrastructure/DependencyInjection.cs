@@ -29,6 +29,8 @@ public static class DependencyInjection
         services.AddScoped<IOrgFunctionService, OrgFunctionService>();
         services.AddScoped<IStorageService, SupabaseStorageService>();
         services.AddScoped<IDocumentService, DocumentService>();
+        services.AddScoped<ITrackingService, TrackingService>();
+        services.AddScoped<IQrCodeService, QrCodeService>();
 
         return services;
     }

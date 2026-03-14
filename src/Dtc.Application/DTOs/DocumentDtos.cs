@@ -5,6 +5,7 @@ using Dtc.Domain.Enums;
 public record DocumentDto(
     Guid Id,
     string DocumentNumber,
+    string? QrCode,
     string Title,
     string? Description,
     DocumentStatus Status,

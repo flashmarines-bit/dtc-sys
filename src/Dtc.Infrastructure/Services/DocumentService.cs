@@ -11,14 +11,16 @@ public class DocumentService : IDocumentService
 {
     private readonly DtcDbContext _db;
     private readonly IStorageService _storage;
+    private readonly IQrCodeService _qrCode;
 
     private static readonly string[] RomanMonths =
         ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
 
-    public DocumentService(DtcDbContext db, IStorageService storage)
+    public DocumentService(DtcDbContext db, IStorageService storage, IQrCodeService qrCode)
     {
         _db = db;
         _storage = storage;
+        _qrCode = qrCode;
     }
 
     public async Task<DocumentListResponse> GetAllAsync(int page = 1, int pageSize = 20, string? search = null, Guid? documentTypeId = null)
@@ -78,10 +80,22 @@ public class DocumentService : IDocumentService
 
         var documentNumber = await GenerateDocumentNumber(docType, orgFunction, request.Department);
 
+        // Generate QR code value + upload PNG to storage
+        var year = DateTime.UtcNow.Year;
+        var qrSeq = await GetNextQrSequenceAsync(year);
+        var qrValue = _qrCode.GenerateQrCodeValue(year, qrSeq);
+
+        var docId = Guid.NewGuid();
+        var qrPngBytes = _qrCode.GenerateQrPng(qrValue);
+        var qrStoragePath = $"qr-codes/{docId}.png";
+        using var qrStream = new System.IO.MemoryStream(qrPngBytes);
+        await _storage.UploadAsync(qrStoragePath, qrStream, "image/png");
+
         var doc = new Document
         {
-            Id = Guid.NewGuid(),
+            Id = docId,
             DocumentNumber = documentNumber,
+            QrCode = qrValue,
             Title = request.Title,
             Description = request.Description,
             Status = DocumentStatus.Draft,
@@ -98,7 +112,7 @@ public class DocumentService : IDocumentService
         {
             Id = Guid.NewGuid(),
             DocumentId = doc.Id,
-            Event = "Created",
+            Event = TrackingEvent.Created,
             Notes = $"Document created: {documentNumber}",
             ActedByUserId = userId,
             CreatedAt = DateTime.UtcNow
@@ -175,7 +189,7 @@ public class DocumentService : IDocumentService
         {
             Id = Guid.NewGuid(),
             DocumentId = documentId,
-            Event = "FileUploaded",
+            Event = TrackingEvent.FileUploaded,
             Notes = $"File uploaded: {fileName}",
             ActedByUserId = userId,
             CreatedAt = DateTime.UtcNow
@@ -248,7 +262,7 @@ public class DocumentService : IDocumentService
         {
             Id = Guid.NewGuid(),
             DocumentId = documentId,
-            Event = "NewVersion",
+            Event = TrackingEvent.NewVersion,
             Notes = $"Version {newVersionNumber}: {fileName}",
             ActedByUserId = userId,
             CreatedAt = DateTime.UtcNow
@@ -306,6 +320,7 @@ public class DocumentService : IDocumentService
                 Year = year,
                 Department = department ?? "",
                 LastSequence = 0,
+                ScopeKey = $"{docType.Code}_{year}_{orgFunction?.Code ?? "GEN"}_{department ?? ""}",
                 CreatedAt = DateTime.UtcNow
             };
             _db.NumberingRecords.Add(record);
@@ -331,8 +346,39 @@ public class DocumentService : IDocumentService
         return number;
     }
 
+
+    // QR sequence — global per year (terpisah dari document numbering)
+    private async Task<int> GetNextQrSequenceAsync(int year)
+    {
+        // Reuse NumberingRecord dengan ScopeKey khusus QR
+        const string qrScope = "__QR__";
+        var record = await _db.NumberingRecords
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(r =>
+                r.ScopeKey == qrScope &&
+                r.Year == year);
+
+        if (record is null)
+        {
+            record = new NumberingRecord
+            {
+                Id = Guid.NewGuid(),
+                DocumentTypeId = (await _db.DocumentTypes.FirstAsync()).Id, // placeholder FK
+                ScopeKey = qrScope,
+                Year = year,
+                LastSequence = 0,
+                CreatedAt = DateTime.UtcNow
+            };
+            _db.NumberingRecords.Add(record);
+        }
+
+        record.LastSequence++;
+        record.UpdatedAt = DateTime.UtcNow;
+        return record.LastSequence;
+    }
+
     private static DocumentDto MapToDto(Document d) => new(
-        d.Id, d.DocumentNumber, d.Title, d.Description,
+        d.Id, d.DocumentNumber, d.QrCode, d.Title, d.Description,
         d.Status, d.OriginalFileName, d.MimeType, d.FileSizeBytes,
         d.StorageStage, d.DocumentTypeId,
         d.DocumentType.Code, d.DocumentType.Name,

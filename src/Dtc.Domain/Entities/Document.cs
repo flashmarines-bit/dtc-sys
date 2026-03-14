@@ -10,6 +10,18 @@ public class Document : BaseEntity
     public string? Description { get; set; }
     public DocumentStatus Status { get; set; } = DocumentStatus.Draft;
 
+    // Physical tracking (Module 1)
+    public string? QrCode { get; set; }                     // DTC-TRK-2026-000001
+    public string? VendorName { get; set; }
+    public string? ReferenceNumber { get; set; }
+    public Guid? AssignedToUserId { get; set; }
+    public User? AssignedToUser { get; set; }
+    public DateTime? SubmittedAt { get; set; }
+    public DateTime? ReceivedAt { get; set; }
+    public DateTime? AssignedAt { get; set; }
+    public DateTime? ReviewStartedAt { get; set; }
+    public string? ReturnReason { get; set; }
+
     // Storage
     public string? StoragePath { get; set; }
     public StorageStage StorageStage { get; set; } = StorageStage.Temp;

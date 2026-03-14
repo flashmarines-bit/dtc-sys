@@ -1,12 +1,27 @@
 using Dtc.Domain.Common;
+using Dtc.Domain.Enums;
 
 namespace Dtc.Domain.Entities;
 
 public class DocumentTracking : BaseEntity
 {
-    public string Event { get; set; } = string.Empty;
+    public TrackingEvent Event { get; set; }
+    public DocumentStatus? FromStatus { get; set; }
+    public DocumentStatus? ToStatus { get; set; }
     public string? Notes { get; set; }
     public string? IpAddress { get; set; }
+
+    // Handover OTP
+    public string? OtpCode { get; set; }
+    public DateTime? OtpExpiresAt { get; set; }
+    public DateTime? OtpConfirmedAt { get; set; }
+
+    // Photo proof (drop-off when recipient absent)
+    public string? PhotoProofPath { get; set; }
+
+    // Who received (for handover tracking)
+    public Guid? RecipientUserId { get; set; }
+    public User? RecipientUser { get; set; }
 
     public Guid DocumentId { get; set; }
     public Document Document { get; set; } = null!;
@@ -24,6 +39,17 @@ public class NumberingRecord : BaseEntity
     public OrganizationFunction? OrganizationFunction { get; set; }
 
     public int Year { get; set; }
+    public string ScopeKey { get; set; } = default!;
     public string? Department { get; set; }
     public int LastSequence { get; set; } = 0;
+}
+
+public class SlaConfiguration : BaseEntity
+{
+    public DocumentStatus FromStatus { get; set; }
+    public DocumentStatus ToStatus { get; set; }
+    public int MaxDurationMinutes { get; set; }
+    public Guid? DocumentTypeId { get; set; }           // null = berlaku semua tipe
+    public DocumentType? DocumentType { get; set; }
+    public string? Description { get; set; }
 }

@@ -18,19 +18,47 @@ public class DtcDbContext : DbContext
     public DbSet<WorkflowAction> WorkflowActions => Set<WorkflowAction>();
     public DbSet<DocumentTracking> DocumentTrackings => Set<DocumentTracking>();
     public DbSet<NumberingRecord> NumberingRecords => Set<NumberingRecord>();
+    public DbSet<SlaConfiguration> SlaConfigurations => Set<SlaConfiguration>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // Apply all configurations from this assembly
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DtcDbContext).Assembly);
 
-        // Global query filter - soft delete
+        // Global query filters - soft delete
         modelBuilder.Entity<User>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Document>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<DocumentType>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<OrganizationFunction>().HasQueryFilter(e => !e.IsDeleted);
+
+        // DocumentTracking — no cascade delete conflicts
+        modelBuilder.Entity<DocumentTracking>(b =>
+        {
+            b.HasOne(t => t.Document)
+             .WithMany(d => d.TrackingLogs)
+             .HasForeignKey(t => t.DocumentId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            b.HasOne(t => t.ActedByUser)
+             .WithMany()
+             .HasForeignKey(t => t.ActedByUserId)
+             .OnDelete(DeleteBehavior.SetNull);
+
+            b.HasOne(t => t.RecipientUser)
+             .WithMany()
+             .HasForeignKey(t => t.RecipientUserId)
+             .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // Document — AssignedToUser no cascade
+        modelBuilder.Entity<Document>(b =>
+        {
+            b.HasOne(d => d.AssignedToUser)
+             .WithMany()
+             .HasForeignKey(d => d.AssignedToUserId)
+             .OnDelete(DeleteBehavior.SetNull);
+        });
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

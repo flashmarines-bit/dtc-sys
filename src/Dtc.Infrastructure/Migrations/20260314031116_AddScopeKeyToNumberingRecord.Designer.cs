@@ -3,6 +3,7 @@ using System;
 using Dtc.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Dtc.Infrastructure.Migrations
 {
     [DbContext(typeof(DtcDbContext))]
-    partial class DtcDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260314031116_AddScopeKeyToNumberingRecord")]
+    partial class AddScopeKeyToNumberingRecord
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -26,12 +29,6 @@ namespace Dtc.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("AssignedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("AssignedToUserId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -66,21 +63,6 @@ namespace Dtc.Infrastructure.Migrations
                     b.Property<string>("OriginalFileName")
                         .HasColumnType("text");
 
-                    b.Property<string>("QrCode")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("ReceivedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ReferenceNumber")
-                        .HasColumnType("text");
-
-                    b.Property<string>("ReturnReason")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("ReviewStartedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
@@ -92,9 +74,6 @@ namespace Dtc.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("SubmittedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -103,12 +82,7 @@ namespace Dtc.Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("VendorName")
-                        .HasColumnType("text");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("AssignedToUserId");
 
                     b.HasIndex("CreatedByUserId");
 
@@ -137,11 +111,9 @@ namespace Dtc.Infrastructure.Migrations
                     b.Property<Guid>("DocumentId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("Event")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("FromStatus")
-                        .HasColumnType("integer");
+                    b.Property<string>("Event")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("IpAddress")
                         .HasColumnType("text");
@@ -152,24 +124,6 @@ namespace Dtc.Infrastructure.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("text");
 
-                    b.Property<string>("OtpCode")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("OtpConfirmedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("OtpExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("PhotoProofPath")
-                        .HasColumnType("text");
-
-                    b.Property<Guid?>("RecipientUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int?>("ToStatus")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -178,8 +132,6 @@ namespace Dtc.Infrastructure.Migrations
                     b.HasIndex("ActedByUserId");
 
                     b.HasIndex("DocumentId");
-
-                    b.HasIndex("RecipientUserId");
 
                     b.ToTable("DocumentTrackings");
                 });
@@ -343,43 +295,6 @@ namespace Dtc.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("OrganizationFunctions");
-                });
-
-            modelBuilder.Entity("Dtc.Domain.Entities.SlaConfiguration", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
-
-                    b.Property<Guid?>("DocumentTypeId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("FromStatus")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("MaxDurationMinutes")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ToStatus")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DocumentTypeId");
-
-                    b.ToTable("SlaConfigurations");
                 });
 
             modelBuilder.Entity("Dtc.Domain.Entities.User", b =>
@@ -581,11 +496,6 @@ namespace Dtc.Infrastructure.Migrations
 
             modelBuilder.Entity("Dtc.Domain.Entities.Document", b =>
                 {
-                    b.HasOne("Dtc.Domain.Entities.User", "AssignedToUser")
-                        .WithMany()
-                        .HasForeignKey("AssignedToUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("Dtc.Domain.Entities.User", "CreatedByUser")
                         .WithMany("Documents")
                         .HasForeignKey("CreatedByUserId")
@@ -602,8 +512,6 @@ namespace Dtc.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("OrganizationFunctionId");
 
-                    b.Navigation("AssignedToUser");
-
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("DocumentType");
@@ -615,8 +523,7 @@ namespace Dtc.Infrastructure.Migrations
                 {
                     b.HasOne("Dtc.Domain.Entities.User", "ActedByUser")
                         .WithMany()
-                        .HasForeignKey("ActedByUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("ActedByUserId");
 
                     b.HasOne("Dtc.Domain.Entities.Document", "Document")
                         .WithMany("TrackingLogs")
@@ -624,16 +531,9 @@ namespace Dtc.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Dtc.Domain.Entities.User", "RecipientUser")
-                        .WithMany()
-                        .HasForeignKey("RecipientUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.Navigation("ActedByUser");
 
                     b.Navigation("Document");
-
-                    b.Navigation("RecipientUser");
                 });
 
             modelBuilder.Entity("Dtc.Domain.Entities.DocumentVersion", b =>
@@ -670,15 +570,6 @@ namespace Dtc.Infrastructure.Migrations
                     b.Navigation("DocumentType");
 
                     b.Navigation("OrganizationFunction");
-                });
-
-            modelBuilder.Entity("Dtc.Domain.Entities.SlaConfiguration", b =>
-                {
-                    b.HasOne("Dtc.Domain.Entities.DocumentType", "DocumentType")
-                        .WithMany()
-                        .HasForeignKey("DocumentTypeId");
-
-                    b.Navigation("DocumentType");
                 });
 
             modelBuilder.Entity("Dtc.Domain.Entities.WorkflowAction", b =>
