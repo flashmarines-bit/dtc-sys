@@ -19,10 +19,15 @@ public static class DependencyInjection
         services.AddDbContext<DtcDbContext>(options =>
             options.UseNpgsql(connectionString));
 
-        // Auth & User services
+        // HttpClient for Supabase Storage
+        services.AddHttpClient("SupabaseStorage");
+
+        // Services
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IDocumentTypeService, DocumentTypeService>();
+        services.AddScoped<IStorageService, SupabaseStorageService>();
+        services.AddScoped<IDocumentService, DocumentService>();
 
         return services;
     }
