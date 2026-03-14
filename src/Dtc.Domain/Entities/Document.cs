@@ -24,6 +24,9 @@ public class Document : BaseEntity
     public Guid CreatedByUserId { get; set; }
     public User CreatedByUser { get; set; } = null!;
 
+    public Guid? OrganizationFunctionId { get; set; }
+    public OrganizationFunction? OrganizationFunction { get; set; }
+
     // Navigation
     public ICollection<DocumentVersion> Versions { get; set; } = [];
     public ICollection<WorkflowInstance> WorkflowInstances { get; set; } = [];
