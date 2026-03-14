@@ -26,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IDocumentTypeService, DocumentTypeService>();
+        services.AddScoped<IOrgFunctionService, OrgFunctionService>();
         services.AddScoped<IStorageService, SupabaseStorageService>();
         services.AddScoped<IDocumentService, DocumentService>();
 

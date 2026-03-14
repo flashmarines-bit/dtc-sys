@@ -15,6 +15,9 @@ public record DocumentDto(
     Guid DocumentTypeId,
     string DocumentTypeCode,
     string DocumentTypeName,
+    Guid? OrganizationFunctionId,
+    string? OrganizationFunctionCode,
+    string? OrganizationFunctionName,
     Guid CreatedByUserId,
     string CreatedByUserName,
     DateTime CreatedAt,
@@ -32,6 +35,7 @@ public record CreateDocumentRequest(
     string Title,
     string? Description,
     Guid DocumentTypeId,
+    Guid? OrganizationFunctionId,
     string? Department
 );
 

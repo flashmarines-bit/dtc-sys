@@ -20,6 +20,9 @@ public class NumberingRecord : BaseEntity
     public Guid DocumentTypeId { get; set; }
     public DocumentType DocumentType { get; set; } = null!;
 
+    public Guid? OrganizationFunctionId { get; set; }
+    public OrganizationFunction? OrganizationFunction { get; set; }
+
     public int Year { get; set; }
     public string? Department { get; set; }
     public int LastSequence { get; set; } = 0;

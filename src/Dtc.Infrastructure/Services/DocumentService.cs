@@ -12,6 +12,9 @@ public class DocumentService : IDocumentService
     private readonly DtcDbContext _db;
     private readonly IStorageService _storage;
 
+    private static readonly string[] RomanMonths =
+        ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+
     public DocumentService(DtcDbContext db, IStorageService storage)
     {
         _db = db;
@@ -20,9 +23,10 @@ public class DocumentService : IDocumentService
 
     public async Task<DocumentListResponse> GetAllAsync(int page = 1, int pageSize = 20, string? search = null, Guid? documentTypeId = null)
     {
-        var query = _db.Set<Document>()
+        var query = _db.Documents
             .Include(d => d.DocumentType)
             .Include(d => d.CreatedByUser)
+            .Include(d => d.OrganizationFunction)
             .AsQueryable();
 
         if (documentTypeId.HasValue)
@@ -50,9 +54,10 @@ public class DocumentService : IDocumentService
 
     public async Task<DocumentDto?> GetByIdAsync(Guid id)
     {
-        var doc = await _db.Set<Document>()
+        var doc = await _db.Documents
             .Include(d => d.DocumentType)
             .Include(d => d.CreatedByUser)
+            .Include(d => d.OrganizationFunction)
             .FirstOrDefaultAsync(d => d.Id == id);
 
         if (doc is null || doc.IsDeleted) return null;
@@ -61,10 +66,17 @@ public class DocumentService : IDocumentService
 
     public async Task<DocumentDto> CreateAsync(CreateDocumentRequest request, Guid userId)
     {
-        var docType = await _db.Set<DocumentType>().FindAsync(request.DocumentTypeId)
+        var docType = await _db.DocumentTypes.FindAsync(request.DocumentTypeId)
             ?? throw new ArgumentException("Document type not found.");
 
-        var documentNumber = await GenerateDocumentNumber(docType, request.Department);
+        OrganizationFunction? orgFunction = null;
+        if (request.OrganizationFunctionId.HasValue)
+        {
+            orgFunction = await _db.OrganizationFunctions.FindAsync(request.OrganizationFunctionId.Value)
+                ?? throw new ArgumentException("Organization function not found.");
+        }
+
+        var documentNumber = await GenerateDocumentNumber(docType, orgFunction, request.Department);
 
         var doc = new Document
         {
@@ -75,46 +87,41 @@ public class DocumentService : IDocumentService
             Status = DocumentStatus.Draft,
             StorageStage = StorageStage.Temp,
             DocumentTypeId = request.DocumentTypeId,
+            OrganizationFunctionId = request.OrganizationFunctionId,
             CreatedByUserId = userId,
             CreatedAt = DateTime.UtcNow
         };
 
-        _db.Set<Document>().Add(doc);
+        _db.Documents.Add(doc);
 
-        // Add tracking log
-        _db.Set<DocumentTracking>().Add(new DocumentTracking
+        _db.DocumentTrackings.Add(new DocumentTracking
         {
             Id = Guid.NewGuid(),
             DocumentId = doc.Id,
             Event = "Created",
-            Notes = $"Document created with number {documentNumber}",
+            Notes = $"Document created: {documentNumber}",
             ActedByUserId = userId,
             CreatedAt = DateTime.UtcNow
         });
 
         await _db.SaveChangesAsync();
 
-        // Reload with includes
         return (await GetByIdAsync(doc.Id))!;
     }
 
     public async Task<DocumentDto?> UpdateAsync(Guid id, UpdateDocumentRequest request)
     {
-        var doc = await _db.Set<Document>()
+        var doc = await _db.Documents
             .Include(d => d.DocumentType)
             .Include(d => d.CreatedByUser)
+            .Include(d => d.OrganizationFunction)
             .FirstOrDefaultAsync(d => d.Id == id);
 
         if (doc is null || doc.IsDeleted) return null;
 
-        if (request.Title is not null)
-            doc.Title = request.Title;
-
-        if (request.Description is not null)
-            doc.Description = request.Description;
-
-        if (request.Status.HasValue)
-            doc.Status = request.Status.Value;
+        if (request.Title is not null) doc.Title = request.Title;
+        if (request.Description is not null) doc.Description = request.Description;
+        if (request.Status.HasValue) doc.Status = request.Status.Value;
 
         doc.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
@@ -124,7 +131,7 @@ public class DocumentService : IDocumentService
 
     public async Task<bool> DeleteAsync(Guid id)
     {
-        var doc = await _db.Set<Document>().FindAsync(id);
+        var doc = await _db.Documents.FindAsync(id);
         if (doc is null || doc.IsDeleted) return false;
 
         doc.IsDeleted = true;
@@ -136,9 +143,10 @@ public class DocumentService : IDocumentService
 
     public async Task<DocumentDto> UploadFileAsync(Guid documentId, Stream fileStream, string fileName, string contentType, Guid userId)
     {
-        var doc = await _db.Set<Document>()
+        var doc = await _db.Documents
             .Include(d => d.DocumentType)
             .Include(d => d.CreatedByUser)
+            .Include(d => d.OrganizationFunction)
             .FirstOrDefaultAsync(d => d.Id == documentId)
             ?? throw new ArgumentException("Document not found.");
 
@@ -152,8 +160,7 @@ public class DocumentService : IDocumentService
         doc.StorageStage = StorageStage.Temp;
         doc.UpdatedAt = DateTime.UtcNow;
 
-        // Create version 1
-        _db.Set<DocumentVersion>().Add(new DocumentVersion
+        _db.DocumentVersions.Add(new DocumentVersion
         {
             Id = Guid.NewGuid(),
             DocumentId = documentId,
@@ -164,8 +171,7 @@ public class DocumentService : IDocumentService
             CreatedAt = DateTime.UtcNow
         });
 
-        // Tracking
-        _db.Set<DocumentTracking>().Add(new DocumentTracking
+        _db.DocumentTrackings.Add(new DocumentTracking
         {
             Id = Guid.NewGuid(),
             DocumentId = documentId,
@@ -181,7 +187,7 @@ public class DocumentService : IDocumentService
 
     public async Task<(Stream stream, string fileName, string contentType)?> DownloadFileAsync(Guid documentId)
     {
-        var doc = await _db.Set<Document>().FindAsync(documentId);
+        var doc = await _db.Documents.FindAsync(documentId);
         if (doc is null || doc.StoragePath is null) return null;
 
         var stream = await _storage.DownloadAsync(doc.StoragePath);
@@ -190,7 +196,7 @@ public class DocumentService : IDocumentService
 
     public async Task<List<DocumentVersionDto>> GetVersionsAsync(Guid documentId)
     {
-        return await _db.Set<DocumentVersion>()
+        return await _db.DocumentVersions
             .Include(v => v.CreatedByUser)
             .Where(v => v.DocumentId == documentId && !v.IsDeleted)
             .OrderByDescending(v => v.VersionNumber)
@@ -204,13 +210,13 @@ public class DocumentService : IDocumentService
     public async Task<DocumentVersionDto> UploadNewVersionAsync(
         Guid documentId, Stream fileStream, string fileName, string contentType, string? notes, Guid userId)
     {
-        var doc = await _db.Set<Document>()
+        var doc = await _db.Documents
             .Include(d => d.DocumentType)
             .Include(d => d.CreatedByUser)
             .FirstOrDefaultAsync(d => d.Id == documentId)
             ?? throw new ArgumentException("Document not found.");
 
-        var lastVersion = await _db.Set<DocumentVersion>()
+        var lastVersion = await _db.DocumentVersions
             .Where(v => v.DocumentId == documentId && !v.IsDeleted)
             .MaxAsync(v => (int?)v.VersionNumber) ?? 0;
 
@@ -219,7 +225,6 @@ public class DocumentService : IDocumentService
 
         await _storage.UploadAsync(storagePath, fileStream, contentType);
 
-        // Update document main file
         doc.StoragePath = storagePath;
         doc.OriginalFileName = fileName;
         doc.MimeType = contentType;
@@ -237,14 +242,14 @@ public class DocumentService : IDocumentService
             CreatedAt = DateTime.UtcNow
         };
 
-        _db.Set<DocumentVersion>().Add(version);
+        _db.DocumentVersions.Add(version);
 
-        _db.Set<DocumentTracking>().Add(new DocumentTracking
+        _db.DocumentTrackings.Add(new DocumentTracking
         {
             Id = Guid.NewGuid(),
             DocumentId = documentId,
             Event = "NewVersion",
-            Notes = $"Version {newVersionNumber} uploaded: {fileName}",
+            Notes = $"Version {newVersionNumber}: {fileName}",
             ActedByUserId = userId,
             CreatedAt = DateTime.UtcNow
         });
@@ -257,16 +262,38 @@ public class DocumentService : IDocumentService
             userId, user?.FullName ?? "", version.CreatedAt);
     }
 
-    // --- Auto Numbering ---
-    private async Task<string> GenerateDocumentNumber(DocumentType docType, string? department)
-    {
-        var year = DateTime.UtcNow.Year;
+    // ==================== FLEXIBLE NUMBERING ENGINE ====================
+    // Supported placeholders:
+    //   {SEQ}         → auto-increment sequence (padded)
+    //   {TYPE}        → document type code (SP3, INV, etc.)
+    //   {FUNGSI}      → organization function code (PHR14410, etc.)
+    //   {SUFFIX}      → organization function suffix (S0, S8, etc.)
+    //   {YEAR}        → 4-digit year (2026)
+    //   {YY}          → 2-digit year (26)
+    //   {MONTH}       → 2-digit month (01-12)
+    //   {MONTH_ROMAN} → Roman numeral month (I-XII)
+    //   {DEPT}        → department code
+    //   {DAY}         → 2-digit day (01-31)
+    //
+    // Example formats:
+    //   "{SEQ}/{TYPE}/{FUNGSI}/{YEAR}-{SUFFIX}"   → 0022/SP3/PHR14410/2026-S0
+    //   "{TYPE}-{YEAR}-{FUNGSI}-{SEQ}"            → SP3-2026-PHR14410-0022
+    //   "{YEAR}.{MONTH}.{SEQ}/{TYPE}"             → 2026.03.0001/MEMO
+    //   "{FUNGSI}/{TYPE}/{YEAR}/{SEQ}-{SUFFIX}"   → PHR14410/SP3/2026/0022-S0
 
-        var record = await _db.Set<NumberingRecord>()
+    private async Task<string> GenerateDocumentNumber(
+        DocumentType docType, OrganizationFunction? orgFunction, string? department)
+    {
+        var now = DateTime.UtcNow;
+        var year = now.Year;
+
+        // Sequence is per: DocumentType + Year + Function (if any) + Department (if any)
+        var record = await _db.NumberingRecords
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(r =>
                 r.DocumentTypeId == docType.Id &&
                 r.Year == year &&
+                r.OrganizationFunctionId == (orgFunction != null ? orgFunction.Id : null) &&
                 r.Department == (department ?? ""));
 
         if (record is null)
@@ -275,12 +302,13 @@ public class DocumentService : IDocumentService
             {
                 Id = Guid.NewGuid(),
                 DocumentTypeId = docType.Id,
+                OrganizationFunctionId = orgFunction?.Id,
                 Year = year,
                 Department = department ?? "",
                 LastSequence = 0,
                 CreatedAt = DateTime.UtcNow
             };
-            _db.Set<NumberingRecord>().Add(record);
+            _db.NumberingRecords.Add(record);
         }
 
         record.LastSequence++;
@@ -289,9 +317,16 @@ public class DocumentService : IDocumentService
         var seq = record.LastSequence.ToString().PadLeft(docType.SequencePadding, '0');
 
         var number = docType.NumberingFormat
+            .Replace("{SEQ}", seq)
+            .Replace("{TYPE}", docType.Code)
+            .Replace("{FUNGSI}", orgFunction?.Code ?? "")
+            .Replace("{SUFFIX}", orgFunction?.Suffix ?? "")
             .Replace("{YEAR}", year.ToString())
+            .Replace("{YY}", (year % 100).ToString("D2"))
+            .Replace("{MONTH}", now.Month.ToString("D2"))
+            .Replace("{MONTH_ROMAN}", RomanMonths[now.Month])
             .Replace("{DEPT}", department ?? "GEN")
-            .Replace("{SEQ}", seq);
+            .Replace("{DAY}", now.Day.ToString("D2"));
 
         return number;
     }
@@ -301,6 +336,9 @@ public class DocumentService : IDocumentService
         d.Status, d.OriginalFileName, d.MimeType, d.FileSizeBytes,
         d.StorageStage, d.DocumentTypeId,
         d.DocumentType.Code, d.DocumentType.Name,
+        d.OrganizationFunctionId,
+        d.OrganizationFunction?.Code,
+        d.OrganizationFunction?.Name,
         d.CreatedByUserId, d.CreatedByUser.FullName,
         d.CreatedAt, d.UpdatedAt
     );
