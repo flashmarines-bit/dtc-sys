@@ -20,11 +20,7 @@ public class DocumentConfiguration : IEntityTypeConfiguration<Document>
             .IsRequired()
             .HasMaxLength(500);
 
-        builder.Property(d => d.Status)
-            .HasConversion<string>();
-
-        builder.Property(d => d.StorageStage)
-            .HasConversion<string>();
+        // Status and StorageStage stored as int (enum)
 
         builder.HasOne(d => d.DocumentType)
             .WithMany(dt => dt.Documents)

@@ -44,3 +44,25 @@ public enum StorageStage
     Quarantine = 1,
     Archive = 2
 }
+
+public enum LibraryStatus
+{
+    None = 0,           // bukan library document
+    Proposed = 1,       // diusulkan masuk library
+    UnderReview = 2,    // sedang direview
+    Approved = 3,       // disetujui, masuk library
+    Archived = 4,       // diarsipkan
+    Rejected = 5        // ditolak
+}
+
+public enum LibraryTrackingEvent
+{
+    Proposed = 0,
+    ReviewStarted = 1,
+    Approved = 2,
+    Archived = 3,
+    Rejected = 4,
+    FileUploaded = 5,
+    NewVersion = 6,
+    TagsUpdated = 7
+}

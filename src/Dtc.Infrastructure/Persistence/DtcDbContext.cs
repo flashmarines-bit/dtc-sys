@@ -51,12 +51,17 @@ public class DtcDbContext : DbContext
              .OnDelete(DeleteBehavior.SetNull);
         });
 
-        // Document — AssignedToUser no cascade
+        // Document — AssignedToUser + LibraryReviewedByUser no cascade
         modelBuilder.Entity<Document>(b =>
         {
             b.HasOne(d => d.AssignedToUser)
              .WithMany()
              .HasForeignKey(d => d.AssignedToUserId)
+             .OnDelete(DeleteBehavior.SetNull);
+
+            b.HasOne(d => d.LibraryReviewedByUser)
+             .WithMany()
+             .HasForeignKey(d => d.LibraryReviewedByUserId)
              .OnDelete(DeleteBehavior.SetNull);
         });
     }

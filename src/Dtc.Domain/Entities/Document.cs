@@ -39,6 +39,16 @@ public class Document : BaseEntity
     public Guid? OrganizationFunctionId { get; set; }
     public OrganizationFunction? OrganizationFunction { get; set; }
 
+    // Library (Module 2)
+    public bool IsLibraryDocument { get; set; } = false;
+    public LibraryStatus LibraryStatus { get; set; } = LibraryStatus.None;
+    public string? Tags { get; set; }                   // comma-separated tags
+    public string? Category { get; set; }
+    public Guid? LibraryReviewedByUserId { get; set; }
+    public User? LibraryReviewedByUser { get; set; }
+    public DateTime? LibraryApprovedAt { get; set; }
+    public string? LibraryRejectionReason { get; set; }
+
     // Navigation
     public ICollection<DocumentVersion> Versions { get; set; } = [];
     public ICollection<WorkflowInstance> WorkflowInstances { get; set; } = [];

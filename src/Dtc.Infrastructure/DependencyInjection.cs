@@ -31,6 +31,7 @@ public static class DependencyInjection
         services.AddScoped<IDocumentService, DocumentService>();
         services.AddScoped<ITrackingService, TrackingService>();
         services.AddScoped<IQrCodeService, QrCodeService>();
+        services.AddScoped<ILibraryService, LibraryService>();
 
         return services;
     }
