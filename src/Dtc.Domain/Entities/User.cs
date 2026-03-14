@@ -10,6 +10,10 @@ public class User : BaseEntity
     public string Role { get; set; } = "User";
     public bool IsActive { get; set; } = true;
 
+    // Auth tokens
+    public string? RefreshToken { get; set; }
+    public DateTime? RefreshTokenExpiryTime { get; set; }
+
     // Navigation
     public ICollection<Document> Documents { get; set; } = [];
     public ICollection<WorkflowAction> WorkflowActions { get; set; } = [];

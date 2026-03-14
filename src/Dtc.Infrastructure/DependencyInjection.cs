@@ -1,4 +1,6 @@
+using Dtc.Application.Interfaces;
 using Dtc.Infrastructure.Persistence;
+using Dtc.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +18,11 @@ public static class DependencyInjection
 
         services.AddDbContext<DtcDbContext>(options =>
             options.UseNpgsql(connectionString));
+
+        // Auth & User services
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IDocumentTypeService, DocumentTypeService>();
 
         return services;
     }
