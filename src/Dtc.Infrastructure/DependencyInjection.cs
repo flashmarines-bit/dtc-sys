@@ -1,4 +1,5 @@
 using Dtc.Application.Interfaces;
+using Dtc.Infrastructure.Notifications;
 using Microsoft.Extensions.Logging;
 using Polly;
 using Polly.Extensions.Http;
@@ -40,6 +41,14 @@ public static class DependencyInjection
         services.AddScoped<IValidatorService, ValidatorService>();
         services.AddScoped<IOcrService, OcrService>();
         services.AddScoped<IEmailService, EmailService>();
+
+        // Notification channels — plug & play
+        services.AddScoped<INotificationChannel, EmailNotificationChannel>();
+        services.AddScoped<INotificationChannel, InAppNotificationChannel>();
+        services.AddScoped<INotificationChannel, WhatsAppNotificationChannel>();
+
+        // Notification service dispatcher
+        services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<ISystemSettingService, SystemSettingService>();
         // OCR Service HttpClient dengan Polly retry + circuit breaker
         services.AddHttpClient("OcrService", client =>

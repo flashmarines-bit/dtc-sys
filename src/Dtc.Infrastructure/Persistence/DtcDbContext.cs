@@ -22,6 +22,7 @@ public class DtcDbContext : DbContext
     public DbSet<SignatoryConfig> SignatoryConfigs => Set<SignatoryConfig>();
     public DbSet<PendingVendorRequest> PendingVendorRequests => Set<PendingVendorRequest>();
     public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
