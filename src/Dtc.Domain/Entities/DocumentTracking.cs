@@ -23,6 +23,15 @@ public class DocumentTracking : BaseEntity
     public Guid? RecipientUserId { get; set; }
     public User? RecipientUser { get; set; }
 
+    // Extended tracking fields
+    public string? ActionContext { get; set; }   // JSON context data
+    public string? PhotoPath { get; set; }       // Foto untuk event ini
+    public bool RequiresAck { get; set; } = false; // Perlu konfirmasi pihak lain?
+    public bool IsAcknowledged { get; set; } = false;
+    public DateTime? AcknowledgedAt { get; set; }
+    public Guid? AcknowledgedByUserId { get; set; }
+    public User? AcknowledgedByUser { get; set; }
+
     public Guid DocumentId { get; set; }
     public Document Document { get; set; } = null!;
 

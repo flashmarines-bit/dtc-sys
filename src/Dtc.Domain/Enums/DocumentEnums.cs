@@ -2,33 +2,89 @@ namespace Dtc.Domain.Enums;
 
 public enum DocumentStatus
 {
-    Draft = 0,
-    Submitted = 1,
-    Received = 2,       // Front desk received physical doc
-    Assigned = 3,       // Assigned to verifier
-    UnderReview = 4,    // Verifier is reviewing
-    Approved = 5,
-    Returned = 6,       // Returned to submitter
-    Rejected = 7,
-    Archived = 8
+    // ── INITIAL ──────────────────────────────────
+    Draft = 0,              // Baru dibuat, belum submit
+
+    // ── VENDOR SIDE ──────────────────────────────
+    Submitted = 1,          // Vendor submit, menunggu antar fisik
+    PreArrivalDeclared = 2, // Vendor deklarasi "Saya sedang mengantar"
+
+    // ── FRONT DESK / LOBI ────────────────────────
+    ReceivedAtFrontDesk = 3,    // Diterima front desk/satpam
+    InTransitInternal = 4,      // Dalam perjalanan ke verifikator
+
+    // ── VERIFIKATOR SIDE ─────────────────────────
+    PendingDualConfirmation = 5, // Menunggu konfirmasi dual (verif + vendor)
+    ReceivedByVerifikator = 6,   // Diterima verifikator, SLA mulai
+    DroppedOffPendingAck = 7,    // Dititip di meja, menunggu konfirmasi
+    InReview = 8,                // Sedang direview
+
+    // ── RETURN FLOW ──────────────────────────────
+    ReturnInitiated = 9,         // Verifikator inisiasi pengembalian
+    WaitingPickupConfirmation = 10, // Menunggu kurir/vendor ambil (OTP)
+    ReturnedToVendor = 11,       // Dikembalikan ke vendor
+
+    // ── TERMINAL STATES ──────────────────────────
+    Approved = 12,          // Disetujui
+    Rejected = 13,          // Ditolak
+    Archived = 14,          // Diarsipkan
+
+    // ── MODULE 2 LIBRARY ─────────────────────────
+    LibraryProposed = 20,   // Diusulkan masuk library
+    LibraryUnderReview = 21,
+    LibraryApproved = 22,
+    LibraryRejected = 23,
+    LibraryArchived = 24
 }
 
 public enum TrackingEvent
 {
+    // Basic
     Created = 0,
     Submitted = 1,
-    Received = 2,
-    Assigned = 3,
-    ReviewStarted = 4,
-    Approved = 5,
-    Returned = 6,
-    Rejected = 7,
     Archived = 8,
-    HandoverInitiated = 9,
-    HandoverConfirmed = 10,
-    PhotoProofUploaded = 11,
     FileUploaded = 12,
-    NewVersion = 13
+    NewVersion = 13,
+
+    // Module 1 — Physical Tracking
+    PreArrivalDeclared = 20,        // Vendor: saya sedang mengantar
+    ReceivedAtFrontDesk = 21,       // Front desk terima
+    ForwardedToTeam = 22,           // Front desk teruskan ke tim
+    DualConfirmationVendor = 23,    // Vendor konfirmasi serah terima
+    DualConfirmationVerif = 24,     // Verifikator konfirmasi serah terima
+    TakeOver = 25,                  // Staf ambil alih dari kolega
+    DropOffInitiated = 26,          // Titip di meja (Santi → Budi)
+    DropOffPhotoUploaded = 27,      // Foto bukti drop-off diupload
+    DropOffAcknowledged = 28,       // Target konfirmasi terima titipan
+    ReviewStarted = 29,             // Mulai review
+    ReturnInitiated = 30,           // Verifikator inisiasi return
+    OtpGenerated = 31,              // OTP pickup dibuat
+    OtpVerified = 32,               // OTP diverifikasi kurir
+    ReturnedToVendor = 33,          // Fisik diserahkan ke vendor/kurir
+    Approved = 34,
+    Rejected = 35,
+
+    // SLA & Alarm
+    SlaWarningTriggered = 40,
+    SlaBreachTriggered = 41,
+    EscalationTriggered = 42,
+    PreArrivalTimeout = 43,
+    DropOffUnacknowledgedAlert = 44,
+
+    // Module 2 — Library
+    LibraryProposed = 50,
+    LibraryReviewStarted = 51,
+    LibraryApproved = 52,
+    LibraryRejected = 53,
+
+    // Module 3 — Vendor Request
+    VendorRequestSubmitted = 60,
+    AnalysisStarted = 61,
+    AnalysisCompleted = 62,
+    AutoRejectedByAI = 63,
+    ValidatorApproved = 64,
+    ValidatorRejected = 65,
+    NumberIssued = 66
 }
 
 public enum WorkflowActionType

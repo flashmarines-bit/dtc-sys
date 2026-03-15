@@ -22,6 +22,42 @@ public class Document : BaseEntity
     public DateTime? ReviewStartedAt { get; set; }
     public string? ReturnReason { get; set; }
 
+    // Module 1 — Extended Physical Tracking
+    public DateTime? PreArrivalDeclaredAt { get; set; }  // Kapan vendor declare mau antar
+    public DateTime? FrontDeskReceivedAt { get; set; }   // Kapan front desk terima
+    public DateTime? VerifikatorReceivedAt { get; set; } // Kapan verifikator terima (SLA start)
+    public DateTime? DropOffAt { get; set; }             // Kapan dititip di meja
+    public DateTime? DropOffAcknowledgedAt { get; set; } // Kapan target konfirmasi titipan
+    public DateTime? ReturnInitiatedAt { get; set; }     // Kapan return diinisiasi
+    public DateTime? ReturnCompletedAt { get; set; }     // Kapan fisik diserahkan ke vendor
+
+    // SLA tracking
+    public Guid? CurrentHolderId { get; set; }           // Siapa yang pegang sekarang
+    public User? CurrentHolder { get; set; }
+    public DateTime? SlaStartedAt { get; set; }          // Kapan SLA mulai (= VerifikatorReceivedAt)
+    public DateTime? SlaDeadlineAt { get; set; }         // Kapan SLA harus selesai
+    public bool SlaBreached { get; set; } = false;
+    public bool EscalationSent { get; set; } = false;
+
+    // OTP untuk pickup kurir
+    public string? PickupOtpCode { get; set; }
+    public DateTime? PickupOtpExpiresAt { get; set; }
+    public DateTime? PickupOtpVerifiedAt { get; set; }
+    public Guid? PickupVerifiedByUserId { get; set; }    // Verifikator yang verify OTP
+
+    // Drop-off photo
+    public string? DropOffPhotoPath { get; set; }        // Path foto bukti drop-off
+    public Guid? DropOffByUserId { get; set; }           // Siapa yang drop-off (Santi)
+    public User? DropOffByUser { get; set; }
+
+    // Vendor contact (untuk Module 1)
+    public string? VendorContactEmail { get; set; }
+    public string? VendorContactPhone { get; set; }
+    public string? VendorPicName { get; set; }           // Nama PIC vendor
+
+    // Team/Department target
+    public string? TargetDepartment { get; set; }        // Dept tujuan dokumen
+
     // Storage
     public string? StoragePath { get; set; }
     public StorageStage StorageStage { get; set; } = StorageStage.Temp;

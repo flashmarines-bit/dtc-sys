@@ -15,15 +15,26 @@ public class TrackingService : ITrackingService
 
     private static readonly Dictionary<DocumentStatus, string> StatusLabels = new()
     {
-        [DocumentStatus.Draft]       = "Draft",
-        [DocumentStatus.Submitted]   = "Submitted",
-        [DocumentStatus.Received]    = "Received",
-        [DocumentStatus.Assigned]    = "Assigned",
-        [DocumentStatus.UnderReview] = "Under Review",
-        [DocumentStatus.Approved]    = "Approved",
-        [DocumentStatus.Returned]    = "Returned",
-        [DocumentStatus.Rejected]    = "Rejected",
-        [DocumentStatus.Archived]    = "Archived",
+        [DocumentStatus.Draft]                    = "Draft",
+        [DocumentStatus.Submitted]                = "Diajukan",
+        [DocumentStatus.PreArrivalDeclared]       = "Sedang Diantar",
+        [DocumentStatus.ReceivedAtFrontDesk]      = "Diterima Front Desk",
+        [DocumentStatus.InTransitInternal]        = "Dalam Perjalanan Internal",
+        [DocumentStatus.PendingDualConfirmation]  = "Menunggu Konfirmasi",
+        [DocumentStatus.ReceivedByVerifikator]    = "Diterima Verifikator",
+        [DocumentStatus.DroppedOffPendingAck]     = "Dititip - Menunggu Konfirmasi",
+        [DocumentStatus.InReview]                 = "Sedang Direview",
+        [DocumentStatus.ReturnInitiated]          = "Pengembalian Diinisiasi",
+        [DocumentStatus.WaitingPickupConfirmation]= "Menunggu Pickup",
+        [DocumentStatus.ReturnedToVendor]         = "Dikembalikan ke Vendor",
+        [DocumentStatus.Approved]                 = "Disetujui",
+        [DocumentStatus.Rejected]                 = "Ditolak",
+        [DocumentStatus.Archived]                 = "Diarsipkan",
+        [DocumentStatus.LibraryProposed]          = "Diusulkan ke Library",
+        [DocumentStatus.LibraryUnderReview]       = "Review Library",
+        [DocumentStatus.LibraryApproved]          = "Library Disetujui",
+        [DocumentStatus.LibraryRejected]          = "Library Ditolak",
+        [DocumentStatus.LibraryArchived]          = "Library Diarsipkan",
     };
 
     public TrackingService(DtcDbContext db, IStorageService storage)
@@ -49,7 +60,7 @@ public class TrackingService : ITrackingService
         return new QrScanResultDto(
             doc.Id, doc.DocumentNumber, doc.QrCode!,
             doc.Title, doc.VendorName, doc.ReferenceNumber,
-            doc.Status, StatusLabels[doc.Status],
+            doc.Status, StatusLabels.GetValueOrDefault(doc.Status, doc.Status.ToString()),
             doc.AssignedToUser?.FullName,
             doc.ReceivedAt, doc.AssignedAt,
             actions, history.Take(5).ToList()
@@ -73,14 +84,14 @@ public class TrackingService : ITrackingService
         AssertStatus(doc, DocumentStatus.Submitted);
 
         doc.ReceivedAt = DateTime.UtcNow;
-        return await TransitionAsync(doc, DocumentStatus.Received,
-            TrackingEvent.Received, userId, request.Notes ?? "Document received by front desk.");
+        return await TransitionAsync(doc, DocumentStatus.ReceivedAtFrontDesk,
+            TrackingEvent.ReceivedAtFrontDesk, userId, request.Notes ?? "Document received by front desk.");
     }
 
     public async Task<DocumentDto> AssignAsync(Guid documentId, Guid userId, AssignDocumentRequest request)
     {
         var doc = await GetDocumentOrThrowAsync(documentId);
-        AssertStatus(doc, DocumentStatus.Received);
+        AssertStatus(doc, DocumentStatus.ReceivedAtFrontDesk);
 
         var verifier = await _db.Users.FindAsync(request.VerifierUserId)
             ?? throw new ArgumentException("Verifier user not found.");
@@ -88,8 +99,8 @@ public class TrackingService : ITrackingService
         doc.AssignedToUserId = request.VerifierUserId;
         doc.AssignedAt = DateTime.UtcNow;
 
-        return await TransitionAsync(doc, DocumentStatus.Assigned,
-            TrackingEvent.Assigned, userId,
+        return await TransitionAsync(doc, DocumentStatus.ReceivedByVerifikator,
+            TrackingEvent.ForwardedToTeam, userId,
             request.Notes ?? $"Assigned to {verifier.FullName}.",
             recipientUserId: request.VerifierUserId);
     }
@@ -97,17 +108,17 @@ public class TrackingService : ITrackingService
     public async Task<DocumentDto> StartReviewAsync(Guid documentId, Guid userId, string? notes = null)
     {
         var doc = await GetDocumentOrThrowAsync(documentId);
-        AssertStatus(doc, DocumentStatus.Assigned);
+        AssertStatus(doc, DocumentStatus.ReceivedByVerifikator);
 
         doc.ReviewStartedAt = DateTime.UtcNow;
-        return await TransitionAsync(doc, DocumentStatus.UnderReview,
+        return await TransitionAsync(doc, DocumentStatus.InReview,
             TrackingEvent.ReviewStarted, userId, notes ?? "Review started.");
     }
 
     public async Task<DocumentDto> ApproveAsync(Guid documentId, Guid userId, string? notes = null)
     {
         var doc = await GetDocumentOrThrowAsync(documentId);
-        AssertStatus(doc, DocumentStatus.UnderReview);
+        AssertStatus(doc, DocumentStatus.InReview);
 
         return await TransitionAsync(doc, DocumentStatus.Approved,
             TrackingEvent.Approved, userId, notes ?? "Document approved.");
@@ -116,15 +127,15 @@ public class TrackingService : ITrackingService
     public async Task<DocumentDto> ReturnAsync(Guid documentId, Guid userId, ReturnDocumentRequest request)
     {
         var doc = await GetDocumentOrThrowAsync(documentId);
-        if (doc.Status != DocumentStatus.UnderReview && doc.Status != DocumentStatus.Assigned)
+        if (doc.Status != DocumentStatus.InReview && doc.Status != DocumentStatus.ReceivedByVerifikator)
             throw new InvalidOperationException($"Cannot return document in status: {doc.Status}");
 
         doc.ReturnReason = request.Reason;
         doc.AssignedToUserId = null;
         doc.AssignedAt = null;
 
-        return await TransitionAsync(doc, DocumentStatus.Returned,
-            TrackingEvent.Returned, userId, $"Returned: {request.Reason}");
+        return await TransitionAsync(doc, DocumentStatus.ReturnedToVendor,
+            TrackingEvent.ReturnedToVendor, userId, $"Returned: {request.Reason}");
     }
 
     // ── HANDOVER OTP ──────────────────────────────────────────────────────
@@ -140,7 +151,7 @@ public class TrackingService : ITrackingService
         var tracking = new DocumentTracking
         {
             DocumentId = documentId,
-            Event = TrackingEvent.HandoverInitiated,
+            Event = TrackingEvent.OtpGenerated,
             FromStatus = doc.Status,
             ToStatus = doc.Status,
             OtpCode = otp,
@@ -164,7 +175,7 @@ public class TrackingService : ITrackingService
 
         var pending = await _db.DocumentTrackings
             .Where(t => t.DocumentId == documentId
-                     && t.Event == TrackingEvent.HandoverInitiated
+                     && t.Event == TrackingEvent.OtpGenerated
                      && t.OtpConfirmedAt == null
                      && t.OtpExpiresAt > DateTime.UtcNow)
             .OrderByDescending(t => t.CreatedAt)
@@ -180,7 +191,7 @@ public class TrackingService : ITrackingService
         _db.DocumentTrackings.Add(new DocumentTracking
         {
             DocumentId = documentId,
-            Event = TrackingEvent.HandoverConfirmed,
+            Event = TrackingEvent.OtpVerified,
             FromStatus = doc.Status,
             ToStatus = doc.Status,
             ActedByUserId = userId,
@@ -204,7 +215,7 @@ public class TrackingService : ITrackingService
         _db.DocumentTrackings.Add(new DocumentTracking
         {
             DocumentId = documentId,
-            Event = TrackingEvent.PhotoProofUploaded,
+            Event = TrackingEvent.DropOffPhotoUploaded,
             FromStatus = doc.Status,
             ToStatus = doc.Status,
             ActedByUserId = userId,
@@ -246,9 +257,9 @@ public class TrackingService : ITrackingService
 
         return new TrackingDashboardDto(
             ReceivedToday:      await _db.Documents.CountAsync(d => d.ReceivedAt != null && d.ReceivedAt.Value.Date == today),
-            PendingAssignment:  await _db.Documents.CountAsync(d => d.Status == DocumentStatus.Received),
-            UnderReview:        await _db.Documents.CountAsync(d => d.Status == DocumentStatus.UnderReview),
-            ReturnedDocuments:  await _db.Documents.CountAsync(d => d.Status == DocumentStatus.Returned),
+            PendingAssignment:  await _db.Documents.CountAsync(d => d.Status == DocumentStatus.ReceivedAtFrontDesk),
+            UnderReview:        await _db.Documents.CountAsync(d => d.Status == DocumentStatus.InReview),
+            ReturnedDocuments:  await _db.Documents.CountAsync(d => d.Status == DocumentStatus.ReturnedToVendor),
             ApprovedToday:      await _db.Documents.CountAsync(d => d.Status == DocumentStatus.Approved && d.UpdatedAt != null && d.UpdatedAt.Value.Date == today),
             SlaOverdue:         slaOverdue.Count
         );
@@ -265,7 +276,8 @@ public class TrackingService : ITrackingService
         var activeDocs = await _db.Documents
             .Where(d => d.Status != DocumentStatus.Approved
                      && d.Status != DocumentStatus.Archived
-                     && d.Status != DocumentStatus.Rejected)
+                     && d.Status != DocumentStatus.Rejected
+                     && d.Status != DocumentStatus.ReturnedToVendor)
             .ToListAsync();
 
         foreach (var doc in activeDocs)
@@ -279,9 +291,9 @@ public class TrackingService : ITrackingService
             var stuckSince = doc.Status switch
             {
                 DocumentStatus.Submitted   => doc.SubmittedAt ?? doc.CreatedAt,
-                DocumentStatus.Received    => doc.ReceivedAt  ?? doc.CreatedAt,
-                DocumentStatus.Assigned    => doc.AssignedAt  ?? doc.CreatedAt,
-                DocumentStatus.UnderReview => doc.ReviewStartedAt ?? doc.CreatedAt,
+                DocumentStatus.ReceivedAtFrontDesk => doc.ReceivedAt  ?? doc.CreatedAt,
+                DocumentStatus.ReceivedByVerifikator => doc.AssignedAt  ?? doc.CreatedAt,
+                DocumentStatus.InReview => doc.ReviewStartedAt ?? doc.CreatedAt,
                 _                          => doc.UpdatedAt   ?? doc.CreatedAt
             };
 
@@ -290,7 +302,7 @@ public class TrackingService : ITrackingService
             {
                 result.Add(new SlaOverdueDto(
                     doc.Id, doc.DocumentNumber, doc.Title, doc.VendorName,
-                    doc.Status, StatusLabels[doc.Status],
+                    doc.Status, StatusLabels.GetValueOrDefault(doc.Status, doc.Status.ToString()),
                     stuckSince, minutesStuck, sla.MaxDurationMinutes
                 ));
             }
@@ -353,10 +365,11 @@ public class TrackingService : ITrackingService
     {
         DocumentStatus.Draft       => ["submit"],
         DocumentStatus.Submitted   => ["receive"],
-        DocumentStatus.Received    => ["assign", "initiate-handover", "upload-photo-proof"],
-        DocumentStatus.Assigned    => ["start-review", "return", "initiate-handover"],
-        DocumentStatus.UnderReview => ["approve", "return"],
-        DocumentStatus.Returned    => ["assign"],
+        DocumentStatus.ReceivedAtFrontDesk => ["forward-to-team", "receive-verifikator"],
+        DocumentStatus.ReceivedByVerifikator => ["start-review", "dropoff", "takeover"],
+        DocumentStatus.DroppedOffPendingAck => ["acknowledge-dropoff"],
+        DocumentStatus.InReview => ["approve", "return", "initiate-return"],
+        DocumentStatus.ReturnedToVendor => [],
         _                          => []
     };
 
