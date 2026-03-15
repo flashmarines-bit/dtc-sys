@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Dtc.Application.DTOs;
 using Dtc.Application.Interfaces;
+using Dtc.Application.DTOs;
 using Dtc.Domain.Common;
 
 [ApiController]
@@ -90,4 +91,41 @@ public class DocumentTypesController : ControllerBase
         if (!result) return NotFound(new { error = "Document type not found." });
         return Ok(new { message = "Document type deleted." });
     }
+
+    /// <summary>GET schema fields untuk DocumentType</summary>
+    [HttpGet("{id:guid}/schema")]
+    public async Task<IActionResult> GetSchema(Guid id,
+        [FromServices] IDynamicFormService dynamicForm)
+    {
+        var schema = await dynamicForm.GetSchemaAsync(id);
+        return Ok(schema);
+    }
+
+    /// <summary>GET DocumentType dengan schema lengkap</summary>
+    [HttpGet("{id:guid}/with-schema")]
+    public async Task<IActionResult> GetWithSchema(Guid id,
+        [FromServices] IDynamicFormService dynamicForm)
+    {
+        var result = await dynamicForm.GetDocumentTypeWithSchemaAsync(id);
+        if (result is null) return NotFound(new { error = "DocumentType not found." });
+        return Ok(result);
+    }
+
+    /// <summary>PUT update MetaSchema</summary>
+    [HttpPut("{id:guid}/schema")]
+    public async Task<IActionResult> UpdateSchema(Guid id,
+        [FromBody] UpdateMetaSchemaRequest request,
+        [FromServices] IDynamicFormService dynamicForm)
+    {
+        try
+        {
+            var result = await dynamicForm.UpdateSchemaAsync(id, request);
+            return Ok(new { message = $"{result.Count} fields saved.", fields = result });
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+    }
+
 }

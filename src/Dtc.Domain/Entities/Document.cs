@@ -29,6 +29,13 @@ public class Document : BaseEntity
     public string? MimeType { get; set; }
     public long? FileSizeBytes { get; set; }
 
+    /// <summary>
+    /// Dynamic metadata — JSONB untuk field yang bervariasi per DocumentType.
+    /// Diisi berdasarkan MetaSchema dari DocumentType.
+    /// Example: {"NomorInvoice":"INV-001","NilaiInvoice":50000000,"LokasiPekerjaan":"Site A"}
+    /// </summary>
+    public string? DynamicData { get; set; }
+
     // Relations
     public Guid DocumentTypeId { get; set; }
     public DocumentType DocumentType { get; set; } = null!;

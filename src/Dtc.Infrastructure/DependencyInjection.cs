@@ -66,6 +66,7 @@ public static class DependencyInjection
         // Notification service dispatcher
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<ISystemSettingService, SystemSettingService>();
+        services.AddScoped<IDynamicFormService, DynamicFormService>();
         // OCR Service HttpClient dengan Polly retry + circuit breaker
         services.AddHttpClient("OcrService", client =>
         {
