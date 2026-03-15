@@ -88,6 +88,18 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("DtcFrontend", policy =>
+        policy
+            .WithOrigins(
+                "http://localhost:3000",
+                "https://cuddly-enigma-69667jq5vvgq24gp9-3000.app.github.dev"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials());
+});
 builder.Services.AddDtcRateLimiting();
 
 var app = builder.Build();
@@ -179,6 +191,7 @@ app.UseStatusCodePages(async ctx =>
     }
 });
 app.UseMiddleware<ErrorHandlingMiddleware>();
+app.UseCors("DtcFrontend");
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
