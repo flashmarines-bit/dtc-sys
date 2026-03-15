@@ -63,4 +63,31 @@ public class SupabaseStorageService : IStorageService
 
         await _http.SendAsync(request);
     }
+
+    public Task<string> GetPublicUrlAsync(string path)
+    {
+        var url = $"{_baseUrl}/object/public/{_bucket}/{path}";
+        return Task.FromResult(url);
+    }
+
+    public async Task<bool> ExistsAsync(string path)
+    {
+        try
+        {
+            var response = await _http.GetAsync(
+                $"{_baseUrl}/object/info/{_bucket}/{path}");
+            return response.IsSuccessStatusCode;
+        }
+        catch { return false; }
+    }
+
+    public async Task<bool> TestConnectionAsync()
+    {
+        try
+        {
+            var response = await _http.GetAsync($"{_baseUrl}/bucket/{_bucket}");
+            return response.IsSuccessStatusCode;
+        }
+        catch { return false; }
+    }
 }

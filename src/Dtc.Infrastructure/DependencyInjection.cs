@@ -32,7 +32,23 @@ public static class DependencyInjection
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IDocumentTypeService, DocumentTypeService>();
         services.AddScoped<IOrgFunctionService, OrgFunctionService>();
-        services.AddScoped<IStorageService, SupabaseStorageService>();
+        // Storage factory — swap provider via config
+        // Storage:Provider = supabase (default) | minio | local
+        services.AddScoped<IStorageService>(provider =>
+        {
+            var config = provider.GetRequiredService<IConfiguration>();
+            var storageProvider = config["Storage:Provider"]?.ToLower() ?? "supabase";
+            return storageProvider switch
+            {
+                "minio" => provider.GetRequiredService<MinioStorageService>(),
+                "local" => provider.GetRequiredService<LocalDiskStorageService>(),
+                _       => provider.GetRequiredService<SupabaseStorageService>()
+            };
+        });
+        services.AddScoped<SupabaseStorageService>();
+        services.AddScoped<MinioStorageService>();
+        services.AddScoped<LocalDiskStorageService>();
+        services.AddHttpClient("MinioStorage");
         services.AddScoped<IDocumentService, DocumentService>();
         services.AddScoped<ITrackingService, TrackingService>();
         services.AddScoped<IQrCodeService, QrCodeService>();
