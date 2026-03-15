@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.RateLimiting;
 namespace Dtc.Api.Controllers;
 
 using System.Security.Claims;
@@ -45,6 +46,7 @@ public class VendorController : ControllerBase
     }
 
     [HttpPost("submissions/{id:guid}/upload")]
+    [EnableRateLimiting("upload")]
     public async Task<IActionResult> UploadPdf(Guid id, IFormFile file)
     {
         if (file is null || file.Length == 0)
@@ -66,8 +68,21 @@ public class VendorController : ControllerBase
             .FirstOrDefaultAsync(s => s.Id == id && s.VendorUserId == GetUserId());
 
         if (submission is null) return NotFound(new { error = "Submission not found." });
-        if (submission.Status != VendorSubmissionStatus.Pending)
-            return BadRequest(new { error = "Submission sudah diproses." });
+
+        // Allow re-submission if previously rejected
+        if (submission.Status == VendorSubmissionStatus.Rejected)
+        {
+            submission.Status = VendorSubmissionStatus.Pending;
+            submission.AiGrade = Dtc.Domain.Enums.AiGrade.Pending;
+            submission.AnalysisCompleted = false;
+            submission.RejectionReason = null;
+            submission.RejectionCategory = null;
+            submission.ValidatorNotes = null;
+            submission.ValidatedAt = null;
+            submission.ExpiresAt = DateTime.UtcNow.AddDays(30);
+        }
+        else if (submission.Status != VendorSubmissionStatus.Pending)
+            return BadRequest(new { error = "Submission sudah diproses dan tidak bisa diubah." });
 
         var storagePath = $"vendor-submissions/temporary/{id}/original.pdf";
         using var stream = file.OpenReadStream();
@@ -103,4 +118,45 @@ public class VendorController : ControllerBase
     [HttpGet("submissions")]
     public async Task<IActionResult> GetMine()
         => Ok(await _vendor.GetMySubmissionsAsync(GetUserId()));
+
+    /// <summary>Buat submission baru sebagai resubmission dari yang ditolak</summary>
+    [HttpPost("submissions/{id:guid}/resubmit")]
+    public async Task<IActionResult> Resubmit(Guid id, [FromBody] ResubmitVendorSubmissionRequest request)
+    {
+        try
+        {
+            var result = await _vendor.ResubmitAsync(id, GetUserId(), request.Notes);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, new
+            {
+                message = "Resubmission berhasil dibuat. Silakan upload file PDF baru.",
+                newSubmissionId = result.Id,
+                submissionNumber = result.SubmissionNumber,
+                resubmissionCount = result.ResubmissionCount,
+                uploadUrl = $"/api/vendor/submissions/{result.Id}/upload"
+            });
+        }
+        catch (InvalidOperationException ex) { return BadRequest(new { error = ex.Message }); }
+        catch (ArgumentException ex) { return NotFound(new { error = ex.Message }); }
+    }
+
+    /// <summary>Cek status resubmission (berapa kali sudah resubmit)</summary>
+    [HttpGet("submissions/{id:guid}/resubmission-status")]
+    public async Task<IActionResult> GetResubmissionStatus(Guid id)
+    {
+        var submission = await _db.PendingVendorRequests
+            .FirstOrDefaultAsync(s => s.Id == id && s.VendorUserId == GetUserId());
+        if (submission is null) return NotFound(new { error = "Submission not found." });
+
+        var count = await _vendor.GetResubmissionCountAsync(id);
+        return Ok(new
+        {
+            submissionId = id,
+            resubmissionCount = count,
+            maxResubmissions = submission.MaxResubmissions,
+            remainingAttempts = submission.MaxResubmissions - count,
+            canResubmit = submission.Status == VendorSubmissionStatus.Rejected
+                       && count < submission.MaxResubmissions
+        });
+    }
+
 }

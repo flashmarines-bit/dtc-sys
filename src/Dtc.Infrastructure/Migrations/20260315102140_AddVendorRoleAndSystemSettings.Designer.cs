@@ -3,6 +3,7 @@ using System;
 using Dtc.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Dtc.Infrastructure.Migrations
 {
     [DbContext(typeof(DtcDbContext))]
-    partial class DtcDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260315102140_AddVendorRoleAndSystemSettings")]
+    partial class AddVendorRoleAndSystemSettings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -436,9 +439,6 @@ namespace Dtc.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<int>("MaxResubmissions")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Notes")
                         .HasColumnType("text");
 
@@ -449,9 +449,6 @@ namespace Dtc.Infrastructure.Migrations
                     b.Property<int>("PageCount")
                         .HasColumnType("integer");
 
-                    b.Property<Guid?>("ParentSubmissionId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("ReferenceNumber")
                         .HasColumnType("text");
 
@@ -461,17 +458,8 @@ namespace Dtc.Infrastructure.Migrations
                     b.Property<string>("RejectionReason")
                         .HasColumnType("text");
 
-                    b.Property<int>("ResubmissionCount")
-                        .HasColumnType("integer");
-
                     b.Property<Guid?>("ResultDocumentId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("ReturnNotes")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("ReturnedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("SearchablePdfPath")
                         .HasColumnType("text");
@@ -524,8 +512,6 @@ namespace Dtc.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DocumentTypeId");
-
-                    b.HasIndex("ParentSubmissionId");
 
                     b.HasIndex("ResultDocumentId");
 
@@ -976,10 +962,6 @@ namespace Dtc.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Dtc.Domain.Entities.PendingVendorRequest", "ParentSubmission")
-                        .WithMany()
-                        .HasForeignKey("ParentSubmissionId");
-
                     b.HasOne("Dtc.Domain.Entities.Document", "ResultDocument")
                         .WithMany()
                         .HasForeignKey("ResultDocumentId");
@@ -999,8 +981,6 @@ namespace Dtc.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("DocumentType");
-
-                    b.Navigation("ParentSubmission");
 
                     b.Navigation("ResultDocument");
 

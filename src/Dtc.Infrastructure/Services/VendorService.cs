@@ -75,6 +75,72 @@ public class VendorService : IVendorService
             .ToListAsync();
     }
 
+
+    public async Task<VendorSubmissionDto> ResubmitAsync(Guid originalId, Guid vendorUserId, string? notes)
+    {
+        var original = await _db.PendingVendorRequests
+            .Include(s => s.VendorUser)
+            .Include(s => s.DocumentType)
+            .FirstOrDefaultAsync(s => s.Id == originalId && s.VendorUserId == vendorUserId)
+            ?? throw new ArgumentException("Submission not found.");
+
+        if (original.Status != VendorSubmissionStatus.Rejected
+            && original.Status != VendorSubmissionStatus.ReturnedForRevision)
+            throw new InvalidOperationException("Hanya submission yang ditolak atau dikembalikan yang bisa di-resubmit.");
+
+        // Cek batas resubmission — hitung dari root chain
+        var rootId = original.ParentSubmissionId ?? original.Id;
+        var totalResubmissions = await _db.PendingVendorRequests
+            .CountAsync(s => (s.ParentSubmissionId == rootId || s.Id == rootId)
+                          && s.VendorUserId == vendorUserId);
+
+        if (totalResubmissions >= original.MaxResubmissions)
+            throw new InvalidOperationException(
+                $"Batas maksimal resubmission ({original.MaxResubmissions}x) telah tercapai.");
+
+        var submissionNumber = await GenerateSubmissionNumberAsync();
+
+        var resubmission = new Dtc.Domain.Entities.PendingVendorRequest
+        {
+            Id = Guid.NewGuid(),
+            SubmissionNumber = submissionNumber,
+            Title = original.Title,
+            Description = notes ?? original.Description,
+            Status = Dtc.Domain.Enums.VendorSubmissionStatus.Pending,
+            VendorCompanyName = original.VendorCompanyName,
+            VendorContactName = original.VendorContactName,
+            VendorContactEmail = original.VendorContactEmail,
+            VendorContactPhone = original.VendorContactPhone,
+            ReferenceNumber = original.ReferenceNumber,
+            DocumentDate = original.DocumentDate,
+            DocumentValue = original.DocumentValue,
+            Notes = notes ?? original.Notes,
+            DocumentTypeId = original.DocumentTypeId,
+            VendorUserId = vendorUserId,
+            OriginalStoragePath = "",
+            FileName = "",
+            FileSizeBytes = 0,
+            ParentSubmissionId = original.ParentSubmissionId ?? original.Id,
+            ResubmissionCount = totalResubmissions,
+            MaxResubmissions = original.MaxResubmissions,
+            ExpiresAt = DateTime.UtcNow.AddDays(30),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _db.PendingVendorRequests.Add(resubmission);
+        await _db.SaveChangesAsync();
+
+        return (await GetSubmissionAsync(resubmission.Id, vendorUserId))!;
+    }
+
+    public async Task<int> GetResubmissionCountAsync(Guid submissionId)
+    {
+        var submission = await _db.PendingVendorRequests.FindAsync(submissionId);
+        if (submission is null) return 0;
+        var rootId = submission.ParentSubmissionId ?? submission.Id;
+        return await _db.PendingVendorRequests
+            .CountAsync(s => s.ParentSubmissionId == rootId || s.Id == rootId);
+    }
     private IQueryable<PendingVendorRequest> GetWithIncludes() =>
         _db.PendingVendorRequests
             .Include(s => s.VendorUser)
@@ -106,6 +172,7 @@ public class VendorService : IVendorService
         null, null,  // URLs generated on demand
         s.ResultDocumentId, s.ResultDocument?.DocumentNumber,
         s.VendorUserId, s.VendorUser.FullName,
-        s.ExpiresAt, s.CreatedAt, s.UpdatedAt
+        s.ExpiresAt, s.CreatedAt, s.UpdatedAt,
+        s.ResubmissionCount, s.MaxResubmissions, s.ParentSubmissionId
     );
 }

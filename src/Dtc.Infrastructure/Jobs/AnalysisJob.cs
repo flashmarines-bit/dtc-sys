@@ -57,7 +57,31 @@ public class AnalysisJob
                 submission.Status = VendorSubmissionStatus.Rejected;
                 submission.AiGrade = AiGrade.Invalid;
                 submission.AiSummary = result.ErrorMessage ?? "Analysis failed";
-                submission.AnalysisCompleted = true;
+    
+            // DPI_ENFORCEMENT: auto-reject jika DPI terlalu rendah
+            if (!result.DpiPass && result.DetectedDpi > 0)
+            {
+                _logger.LogWarning("DPI too low for submission {Id}: {Dpi} DPI (min 300)", submissionId, result.DetectedDpi);
+
+                submission.Status = VendorSubmissionStatus.Rejected;
+                submission.RejectionCategory = Dtc.Domain.Enums.RejectionCategory.KualitasScanTidakMemadai;
+                submission.RejectionReason = $"Kualitas scan tidak memadai. DPI terdeteksi: {result.DetectedDpi} DPI (minimum 300 DPI). Silakan scan ulang dengan resolusi lebih tinggi.";
+                submission.ValidatedAt = DateTime.UtcNow;
+                submission.UpdatedAt = DateTime.UtcNow;
+                await _db.SaveChangesAsync();
+
+                await _email.SendVendorRejectedAsync(
+                    submission.VendorContactEmail,
+                    submission.VendorContactName,
+                    submission.RejectionReason,
+                    "Kualitas Scan Tidak Memadai (DPI Rendah)"
+                );
+
+                _logger.LogInformation("Submission {Id} auto-rejected: DPI {Dpi} < 300", submissionId, result.DetectedDpi);
+                return;
+            }
+
+            submission.AnalysisCompleted = true;
                 submission.AnalysisCompletedAt = DateTime.UtcNow;
                 submission.AnalysisErrorMessage = result.ErrorMessage;
                 submission.UpdatedAt = DateTime.UtcNow;
@@ -97,6 +121,30 @@ public class AnalysisJob
             submission.PageCount = result.TotalPages;
             submission.DetectedDpi = result.DetectedDpi;
             submission.DpiCheckResult = result.DpiPass ? DpiCheckResult.Pass : DpiCheckResult.TooLow;
+
+            // DPI_ENFORCEMENT: auto-reject jika DPI terlalu rendah
+            if (!result.DpiPass && result.DetectedDpi > 0)
+            {
+                _logger.LogWarning("DPI too low for submission {Id}: {Dpi} DPI (min 300)", submissionId, result.DetectedDpi);
+
+                submission.Status = VendorSubmissionStatus.Rejected;
+                submission.RejectionCategory = Dtc.Domain.Enums.RejectionCategory.KualitasScanTidakMemadai;
+                submission.RejectionReason = $"Kualitas scan tidak memadai. DPI terdeteksi: {result.DetectedDpi} DPI (minimum 300 DPI). Silakan scan ulang dengan resolusi lebih tinggi.";
+                submission.ValidatedAt = DateTime.UtcNow;
+                submission.UpdatedAt = DateTime.UtcNow;
+                await _db.SaveChangesAsync();
+
+                await _email.SendVendorRejectedAsync(
+                    submission.VendorContactEmail,
+                    submission.VendorContactName,
+                    submission.RejectionReason,
+                    "Kualitas Scan Tidak Memadai (DPI Rendah)"
+                );
+
+                _logger.LogInformation("Submission {Id} auto-rejected: DPI {Dpi} < 300", submissionId, result.DetectedDpi);
+                return;
+            }
+
             submission.AnalysisCompleted = true;
             submission.AnalysisCompletedAt = DateTime.UtcNow;
             submission.Status = VendorSubmissionStatus.UnderReview;

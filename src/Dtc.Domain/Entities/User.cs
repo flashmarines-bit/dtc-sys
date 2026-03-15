@@ -14,6 +14,10 @@ public class User : BaseEntity
     public string? RefreshToken { get; set; }
     public DateTime? RefreshTokenExpiryTime { get; set; }
 
+    // Vendor-specific fields
+    public string? CompanyName { get; set; }
+    public string? ContactPhone { get; set; }
+
     // Navigation
     public ICollection<Document> Documents { get; set; } = [];
     public ICollection<WorkflowAction> WorkflowActions { get; set; } = [];

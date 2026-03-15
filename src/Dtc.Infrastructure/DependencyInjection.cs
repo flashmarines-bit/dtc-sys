@@ -36,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<IValidatorService, ValidatorService>();
         services.AddScoped<IOcrService, OcrService>();
         services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<ISystemSettingService, SystemSettingService>();
         services.AddHttpClient("OcrService");
 
         return services;

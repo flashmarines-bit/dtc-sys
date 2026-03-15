@@ -51,6 +51,16 @@ public class PendingVendorRequest : BaseEntity
     // Expiry (30 hari untuk temporary)
     public DateTime ExpiresAt { get; set; }
 
+    // Return for revision
+    public string? ReturnNotes { get; set; }
+    public DateTime? ReturnedAt { get; set; }
+
+    // Re-submission tracking
+    public int ResubmissionCount { get; set; } = 0;
+    public int MaxResubmissions { get; set; } = 3;
+    public Guid? ParentSubmissionId { get; set; }
+    public PendingVendorRequest? ParentSubmission { get; set; }
+
     // Relations
     public Guid VendorUserId { get; set; }
     public User VendorUser { get; set; } = null!;

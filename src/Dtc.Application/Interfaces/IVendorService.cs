@@ -7,4 +7,6 @@ public interface IVendorService
     Task<VendorSubmissionDto> CreateSubmissionAsync(CreateVendorSubmissionRequest request, Guid vendorUserId);
     Task<VendorSubmissionDto?> GetSubmissionAsync(Guid id, Guid vendorUserId);
     Task<List<VendorSubmissionDto>> GetMySubmissionsAsync(Guid vendorUserId);
+    Task<VendorSubmissionDto> ResubmitAsync(Guid originalId, Guid vendorUserId, string? notes);
+    Task<int> GetResubmissionCountAsync(Guid submissionId);
 }

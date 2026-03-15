@@ -21,6 +21,7 @@ public class DtcDbContext : DbContext
     public DbSet<SlaConfiguration> SlaConfigurations => Set<SlaConfiguration>();
     public DbSet<SignatoryConfig> SignatoryConfigs => Set<SignatoryConfig>();
     public DbSet<PendingVendorRequest> PendingVendorRequests => Set<PendingVendorRequest>();
+    public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

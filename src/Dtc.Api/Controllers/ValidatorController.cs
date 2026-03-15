@@ -45,4 +45,13 @@ public class ValidatorController : ControllerBase
         catch (InvalidOperationException ex) { return BadRequest(new { error = ex.Message }); }
         catch (ArgumentException ex) { return NotFound(new { error = ex.Message }); }
     }
+
+    [HttpPost("review/{id:guid}/return-for-revision")]
+    public async Task<IActionResult> ReturnForRevision(Guid id, [FromBody] ReturnForRevisionRequest request)
+    {
+        try { return Ok(await _validator.ReturnForRevisionAsync(id, GetUserId(), request.ReturnNotes)); }
+        catch (InvalidOperationException ex) { return BadRequest(new { error = ex.Message }); }
+        catch (ArgumentException ex) { return NotFound(new { error = ex.Message }); }
+    }
+
 }

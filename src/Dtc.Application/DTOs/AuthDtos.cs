@@ -19,4 +19,20 @@ public record UserDto(
     string Email,
     string Role,
     bool IsActive
+);public record VendorProfileDto(
+    Guid Id,
+    string FullName,
+    string Email,
+    string CompanyName,
+    string ContactPhone,
+    bool IsActive,
+    DateTime CreatedAt
+);
+
+public record VendorRegisterRequest(
+    string Email,
+    string Password,
+    string FullName,
+    string CompanyName,
+    string? PhoneNumber
 );

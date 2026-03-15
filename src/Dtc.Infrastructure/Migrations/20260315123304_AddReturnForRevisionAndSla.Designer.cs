@@ -3,6 +3,7 @@ using System;
 using Dtc.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Dtc.Infrastructure.Migrations
 {
     [DbContext(typeof(DtcDbContext))]
-    partial class DtcDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260315123304_AddReturnForRevisionAndSla")]
+    partial class AddReturnForRevisionAndSla
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

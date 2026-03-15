@@ -87,7 +87,8 @@ public enum VendorSubmissionStatus
     Analysing = 1,
     UnderReview = 2,
     Accepted = 3,
-    Rejected = 4
+    Rejected = 4,
+    ReturnedForRevision = 5
 }
 
 public enum AiGrade

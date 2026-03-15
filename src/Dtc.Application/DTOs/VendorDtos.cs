@@ -46,7 +46,10 @@ public record VendorSubmissionDto(
     string VendorUserName,
     DateTime ExpiresAt,
     DateTime CreatedAt,
-    DateTime? UpdatedAt
+    DateTime? UpdatedAt,
+    int ResubmissionCount,
+    int MaxResubmissions,
+    Guid? ParentSubmissionId
 );
 
 public record CreateVendorSubmissionRequest(
@@ -81,4 +84,12 @@ public record ValidatorQueueItemDto(
     bool AnalysisCompleted,
     DateTime CreatedAt,
     DateTime ExpiresAt
+);
+
+public record ResubmitVendorSubmissionRequest(
+    string? Notes  // Catatan dari vendor untuk resubmission
+);
+
+public record ReturnForRevisionRequest(
+    string ReturnNotes
 );

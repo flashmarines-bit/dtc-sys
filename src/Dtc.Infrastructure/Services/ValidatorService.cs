@@ -236,6 +236,36 @@ public class ValidatorService : IValidatorService
         null, null,
         s.ResultDocumentId, s.ResultDocument?.DocumentNumber,
         s.VendorUserId, s.VendorUser.FullName,
-        s.ExpiresAt, s.CreatedAt, s.UpdatedAt
+        s.ExpiresAt, s.CreatedAt, s.UpdatedAt,
+        s.ResubmissionCount, s.MaxResubmissions, s.ParentSubmissionId
     );
+
+    public async Task<VendorSubmissionDto> ReturnForRevisionAsync(
+        Guid id, Guid validatorUserId, string returnNotes)
+    {
+        var submission = await GetWithIncludes()
+            .FirstOrDefaultAsync(s => s.Id == id)
+            ?? throw new ArgumentException("Submission not found.");
+
+        if (submission.Status != VendorSubmissionStatus.UnderReview)
+            throw new InvalidOperationException("Hanya submission UnderReview yang bisa dikembalikan.");
+
+        submission.Status = VendorSubmissionStatus.ReturnedForRevision;
+        submission.ReturnNotes = returnNotes;
+        submission.ReturnedAt = DateTime.UtcNow;
+        submission.ValidatorUserId = validatorUserId;
+        submission.ValidatedAt = DateTime.UtcNow;
+        submission.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
+        await _email.SendVendorReturnedAsync(
+            submission.VendorContactEmail,
+            submission.VendorContactName,
+            submission.SubmissionNumber,
+            returnNotes
+        );
+
+        return MapToDto(submission);
+    }
+
 }

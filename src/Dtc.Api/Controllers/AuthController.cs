@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.RateLimiting;
 namespace Dtc.Api.Controllers;
 
 using Microsoft.AspNetCore.Authorization;
@@ -17,6 +18,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         try
@@ -31,6 +33,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
         try
@@ -44,6 +47,22 @@ public class AuthController : ControllerBase
         }
     }
 
+
+    /// <summary>Register as vendor (public endpoint)</summary>
+    [HttpPost("register-vendor")]
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> RegisterVendor([FromBody] VendorRegisterRequest request)
+    {
+        try
+        {
+            var response = await _authService.RegisterVendorAsync(request);
+            return Ok(response);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { error = ex.Message });
+        }
+    }
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
     {

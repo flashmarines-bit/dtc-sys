@@ -8,4 +8,5 @@ public interface IAuthService
     Task<AuthResponse> RegisterAsync(RegisterRequest request);
     Task<AuthResponse?> RefreshTokenAsync(string refreshToken);
     Task RevokeTokenAsync(string refreshToken);
+    Task<AuthResponse> RegisterVendorAsync(VendorRegisterRequest request);
 }

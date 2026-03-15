@@ -103,6 +103,36 @@ public class AuthService : IAuthService
         }
     }
 
+
+    public async Task<AuthResponse> RegisterVendorAsync(VendorRegisterRequest request)
+    {
+        var exists = await _db.Users.AnyAsync(u => u.Email == request.Email && !u.IsDeleted);
+        if (exists)
+            throw new InvalidOperationException("Email already registered.");
+
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            FullName = request.FullName,
+            Email = request.Email,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+            Role = "Vendor",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _db.Users.Add(user);
+        await _db.SaveChangesAsync();
+
+        var token = GenerateJwtToken(user);
+        var refreshToken = GenerateRefreshToken();
+
+        user.RefreshToken = refreshToken;
+        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+        await _db.SaveChangesAsync();
+
+        return BuildAuthResponse(user, token, refreshToken);
+    }
     private string GenerateJwtToken(User user)
     {
         var key = new SymmetricSecurityKey(
