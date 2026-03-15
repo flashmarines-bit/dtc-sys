@@ -29,7 +29,11 @@ public record LibraryDocumentDto(
     string? RejectionReason,
     int VersionCount,
     DateTime CreatedAt,
-    DateTime? UpdatedAt
+    DateTime? UpdatedAt,
+    DateTime? ContentExpiresAt,
+    string? ContractNumber,
+    bool IsConfidential,
+    string? AllowedRoles
 );
 
 public record LibraryListResponse(
@@ -76,4 +80,23 @@ public record LibraryVersionDto(
     Guid CreatedByUserId,
     string CreatedByUserName,
     DateTime CreatedAt
+);
+
+// ── TAMBAHAN ────────────────────────────────────────────────
+
+public record UpdateLibraryAccessRequest(
+    string? AllowedRoles,     // comma-separated: "Admin,Validator"
+    bool IsConfidential,
+    DateTime? ContentExpiresAt
+);
+
+public record DocumentDependencyDto(
+    Guid Id,
+    string DocumentNumber,
+    string Title,
+    string? ContractNumber,
+    string DocumentTypeName,
+    string StatusLabel,
+    DateTime CreatedAt,
+    List<DocumentDependencyDto> Children
 );

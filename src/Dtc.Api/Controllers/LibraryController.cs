@@ -107,4 +107,59 @@ public class LibraryController : ControllerBase
         if (result is null) return NotFound(new { error = "Document not found." });
         return Ok(result);
     }
+
+    /// <summary>GET dependency graph dokumen</summary>
+    [HttpGet("{id:guid}/dependency-graph")]
+    public async Task<IActionResult> GetDependencyGraph(Guid id)
+    {
+        var result = await _library.GetDependencyGraphAsync(id);
+        if (result is null) return NotFound(new { error = "Document not found." });
+        return Ok(result);
+    }
+
+    /// <summary>GET dokumen berdasarkan nomor kontrak</summary>
+    [HttpGet("by-contract/{contractNumber}")]
+    public async Task<IActionResult> GetByContract(string contractNumber)
+    {
+        var result = await _library.GetByContractNumberAsync(contractNumber);
+        return Ok(result);
+    }
+
+    /// <summary>GET dokumen yang akan kadaluarsa</summary>
+    [HttpGet("expiring")]
+    public async Task<IActionResult> GetExpiring([FromQuery] int daysAhead = 30)
+    {
+        var result = await _library.GetExpiringDocumentsAsync(daysAhead);
+        return Ok(result);
+    }
+
+    /// <summary>PUT update role-based access</summary>
+    [HttpPut("{id:guid}/access")]
+    [Authorize(Roles = "SysAdmin,Admin")]
+    public async Task<IActionResult> UpdateAccess(Guid id,
+        [FromBody] UpdateLibraryAccessRequest request)
+    {
+        var userId = Guid.Parse(User.FindFirst(
+            System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("sub")?.Value!);
+        var result = await _library.UpdateAccessAsync(id, request, userId);
+        if (result is null) return NotFound(new { error = "Document not found." });
+        return Ok(result);
+    }
+
+    /// <summary>GET search by metadata/content</summary>
+    [HttpGet("search")]
+    public async Task<IActionResult> SearchMetadata(
+        [FromQuery] string q,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        if (string.IsNullOrWhiteSpace(q))
+            return BadRequest(new { error = "Query cannot be empty." });
+        var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value
+                ?? User.FindFirst("role")?.Value ?? "";
+        var result = await _library.SearchByMetadataAsync(q, page, pageSize, role);
+        return Ok(result);
+    }
+
 }

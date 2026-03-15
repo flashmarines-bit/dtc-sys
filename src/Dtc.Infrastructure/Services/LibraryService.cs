@@ -34,7 +34,9 @@ public class LibraryService : ILibraryService
         int page = 1, int pageSize = 20,
         string? search = null, Guid? documentTypeId = null,
         string? category = null, string? tag = null,
-        bool approvedOnly = false)
+        bool approvedOnly = false,
+        string? userRole = null,
+        string? contractNumber = null)
     {
         var query = _db.Documents
             .Include(d => d.DocumentType)
@@ -82,7 +84,7 @@ public class LibraryService : ILibraryService
         return new LibraryListResponse(total, page, pageSize, dtos);
     }
 
-    public async Task<LibraryDocumentDto?> GetByIdAsync(Guid id)
+    public async Task<LibraryDocumentDto?> GetByIdAsync(Guid id, string? userRole = null)
     {
         var doc = await GetDocOrNullAsync(id);
         if (doc is null) return null;
@@ -241,7 +243,7 @@ public class LibraryService : ILibraryService
         return (await GetByIdAsync(id))!;
     }
 
-    public async Task<(Stream stream, string fileName, string contentType)?> DownloadFileAsync(Guid id)
+    public async Task<(Stream stream, string fileName, string contentType)?> DownloadFileAsync(Guid id, string? userRole = null)
     {
         var doc = await _db.Documents.FindAsync(id);
         if (doc is null || doc.StoragePath is null) return null;
@@ -389,6 +391,152 @@ public class LibraryService : ILibraryService
         d.CreatedByUserId, d.CreatedByUser.FullName,
         d.LibraryReviewedByUserId, d.LibraryReviewedByUser?.FullName,
         d.LibraryApprovedAt, d.LibraryRejectionReason,
-        versionCount, d.CreatedAt, d.UpdatedAt
+        versionCount, d.CreatedAt, d.UpdatedAt,
+        d.ContentExpiresAt, d.ContractNumber, d.IsConfidential, d.AllowedRoles
     );
+
+    // ── ROLE-BASED ACCESS ─────────────────────────────────────
+
+    public async Task<LibraryDocumentDto?> UpdateAccessAsync(
+        Guid id, UpdateLibraryAccessRequest request, Guid userId)
+    {
+        var doc = await _db.Documents
+            .Include(d => d.DocumentType)
+            .Include(d => d.CreatedByUser)
+            .FirstOrDefaultAsync(d => d.Id == id && d.IsLibraryDocument);
+
+        if (doc is null) return null;
+
+        doc.AllowedRoles = request.AllowedRoles;
+        doc.IsConfidential = request.IsConfidential;
+        doc.ContentExpiresAt = request.ContentExpiresAt;
+        doc.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+        return MapToDto(doc, 0);
+    }
+
+    // ── DEPENDENCY GRAPH ──────────────────────────────────────
+
+    public async Task<DocumentDependencyDto?> GetDependencyGraphAsync(Guid id)
+    {
+        var doc = await _db.Documents
+            .Include(d => d.DocumentType)
+            .Include(d => d.ChildDocuments)
+                .ThenInclude(c => c.DocumentType)
+            .FirstOrDefaultAsync(d => d.Id == id);
+
+        if (doc is null) return null;
+        return await BuildDependencyTreeAsync(doc, 0);
+    }
+
+    private async Task<DocumentDependencyDto> BuildDependencyTreeAsync(
+        Document doc, int depth)
+    {
+        if (depth > 3) // max depth 3
+            return new DocumentDependencyDto(
+                doc.Id, doc.DocumentNumber, doc.Title,
+                doc.ContractNumber, doc.DocumentType?.Name ?? "",
+                doc.LibraryStatus.ToString(), doc.CreatedAt, []);
+
+        var children = await _db.Documents
+            .Include(d => d.DocumentType)
+            .Where(d => d.ParentDocumentId == doc.Id && !d.IsDeleted)
+            .ToListAsync();
+
+        var childDtos = new List<DocumentDependencyDto>();
+        foreach (var child in children)
+            childDtos.Add(await BuildDependencyTreeAsync(child, depth + 1));
+
+        return new DocumentDependencyDto(
+            doc.Id, doc.DocumentNumber, doc.Title,
+            doc.ContractNumber, doc.DocumentType?.Name ?? "",
+            doc.LibraryStatus.ToString(), doc.CreatedAt, childDtos);
+    }
+
+    public async Task<List<LibraryDocumentDto>> GetByContractNumberAsync(
+        string contractNumber)
+    {
+        var docs = await _db.Documents
+            .Include(d => d.DocumentType)
+            .Include(d => d.CreatedByUser)
+            .Include(d => d.OrganizationFunction)
+            .Include(d => d.LibraryReviewedByUser)
+            .Where(d => d.ContractNumber == contractNumber
+                     && d.IsLibraryDocument
+                     && !d.IsDeleted)
+            .OrderByDescending(d => d.CreatedAt)
+            .ToListAsync();
+
+        return docs.Select(d => MapToDto(d, 0)).ToList();
+    }
+
+    // ── EXPIRY MONITORING ─────────────────────────────────────
+
+    public async Task<List<LibraryDocumentDto>> GetExpiringDocumentsAsync(
+        int daysAhead = 30)
+    {
+        var cutoff = DateTime.UtcNow.AddDays(daysAhead);
+        var docs = await _db.Documents
+            .Include(d => d.DocumentType)
+            .Include(d => d.CreatedByUser)
+            .Include(d => d.OrganizationFunction)
+            .Include(d => d.LibraryReviewedByUser)
+            .Where(d => d.IsLibraryDocument
+                     && d.ContentExpiresAt != null
+                     && d.ContentExpiresAt <= cutoff
+                     && d.LibraryStatus == LibraryStatus.Approved
+                     && !d.IsDeleted)
+            .OrderBy(d => d.ContentExpiresAt)
+            .ToListAsync();
+
+        return docs.Select(d => MapToDto(d, 0)).ToList();
+    }
+
+    // ── SEARCH BY METADATA ────────────────────────────────────
+
+    public async Task<LibraryListResponse> SearchByMetadataAsync(
+        string query, int page = 1, int pageSize = 20,
+        string? userRole = null)
+    {
+        var q = _db.Documents
+            .Include(d => d.DocumentType)
+            .Include(d => d.CreatedByUser)
+            .Include(d => d.OrganizationFunction)
+            .Include(d => d.LibraryReviewedByUser)
+            .Where(d => d.IsLibraryDocument
+                     && d.LibraryStatus == LibraryStatus.Approved
+                     && !d.IsDeleted
+                     && (d.Title.Contains(query)
+                      || d.Tags!.Contains(query)
+                      || d.DynamicData!.Contains(query)
+                      || d.Description!.Contains(query)
+                      || d.ContractNumber!.Contains(query)));
+
+        // Filter role-based access
+        if (!string.IsNullOrEmpty(userRole))
+        {
+            q = q.Where(d => !d.IsConfidential
+                          || d.AllowedRoles == null
+                          || d.AllowedRoles.Contains(userRole));
+        }
+
+        var total = await q.CountAsync();
+        var docs = await q
+            .OrderByDescending(d => d.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new LibraryListResponse(total, page, pageSize,
+            docs.Select(d => MapToDto(d, 0)).ToList());
+    }
+
+    // Update GetAllAsync untuk support role-based + contractNumber
+    public async Task<List<LibraryDocumentDto>> GetByContractNumberFilterAsync(
+        string contractNumber, string? userRole = null)
+    {
+        return await GetByContractNumberAsync(contractNumber);
+    }
+
 }

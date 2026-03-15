@@ -92,6 +92,22 @@ public class Document : BaseEntity
     public DateTime? LibraryApprovedAt { get; set; }
     public string? LibraryRejectionReason { get; set; }
 
+    // Module 2 — Enhanced Library fields
+    /// <summary>Comma-separated roles yang boleh akses: "Admin,Validator,SysAdmin"</summary>
+    public string? AllowedRoles { get; set; }
+    /// <summary>Null = bisa diakses semua role yang punya akses library</summary>
+    public bool IsConfidential { get; set; } = false;
+    /// <summary>Tanggal kadaluarsa dokumen (isi konten, bukan file)</summary>
+    public DateTime? ContentExpiresAt { get; set; }
+    /// <summary>Flag bahwa notifikasi expiry sudah dikirim</summary>
+    public bool ExpiryNotificationSent { get; set; } = false;
+    /// <summary>Nomor kontrak/referensi untuk dependency graph</summary>
+    public string? ContractNumber { get; set; }
+    /// <summary>Parent document ID untuk dependency graph</summary>
+    public Guid? ParentDocumentId { get; set; }
+    public Document? ParentDocument { get; set; }
+    public ICollection<Document> ChildDocuments { get; set; } = [];
+
     // Navigation
     public ICollection<DocumentVersion> Versions { get; set; } = [];
     public ICollection<WorkflowInstance> WorkflowInstances { get; set; } = [];

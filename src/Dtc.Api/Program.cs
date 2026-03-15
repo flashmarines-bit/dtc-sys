@@ -141,6 +141,11 @@ using (var scope = app.Services.CreateScope())
         "alarm-floating-documents",
         j => j.CheckFloatingDocumentsAsync(),
         "0 8 * * *");
+
+    jobManager.AddOrUpdate<LibraryExpiryJob>(
+        "library-expiry-check",
+        j => j.CheckExpiringDocumentsAsync(),
+        "0 9 * * *"); // setiap hari jam 9 pagi
 }
 
 // Seed database
