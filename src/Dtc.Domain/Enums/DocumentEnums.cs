@@ -66,3 +66,34 @@ public enum LibraryTrackingEvent
     NewVersion = 6,
     TagsUpdated = 7
 }
+
+public enum RejectionCategory
+{
+    KualitasScanTidakMemadai = 0,
+    DokumenTidakLengkap = 1,
+    Lainnya = 2
+}
+
+public enum DpiCheckResult
+{
+    Pass = 0,       // >= 300 DPI
+    TooLow = 1,     // < 300 DPI
+    Unknown = 2     // tidak bisa detect
+}
+
+public enum VendorSubmissionStatus
+{
+    Pending = 0,
+    Analysing = 1,
+    UnderReview = 2,
+    Accepted = 3,
+    Rejected = 4
+}
+
+public enum AiGrade
+{
+    Pending = 0,
+    Complete = 1,
+    Incomplete = 2,
+    Invalid = 3
+}

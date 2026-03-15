@@ -1,0 +1,11 @@
+fastapi==0.115.0
+uvicorn==0.30.0
+paddlepaddle==2.6.2
+paddleocr==2.7.3
+pypdfium2==4.30.0
+python-multipart==0.0.9
+Pillow==10.4.0
+numpy==1.26.4
+opencv-python-headless==4.9.0.80
+reportlab==4.2.2
+httpx==0.27.0

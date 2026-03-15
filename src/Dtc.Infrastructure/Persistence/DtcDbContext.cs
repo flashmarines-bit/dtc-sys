@@ -19,6 +19,8 @@ public class DtcDbContext : DbContext
     public DbSet<DocumentTracking> DocumentTrackings => Set<DocumentTracking>();
     public DbSet<NumberingRecord> NumberingRecords => Set<NumberingRecord>();
     public DbSet<SlaConfiguration> SlaConfigurations => Set<SlaConfiguration>();
+    public DbSet<SignatoryConfig> SignatoryConfigs => Set<SignatoryConfig>();
+    public DbSet<PendingVendorRequest> PendingVendorRequests => Set<PendingVendorRequest>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
