@@ -111,31 +111,37 @@ using (var scope = app.Services.CreateScope())
     Hangfire.GlobalJobFilters.Filters.Add(filter);
 }
 
-// Register Module 1 Alarm recurring jobs
-RecurringJob.AddOrUpdate<Module1AlarmJob>(
-    "alarm-pre-arrival-timeout",
-    j => j.CheckPreArrivalTimeoutAsync(),
-    "*/30 * * * *"); // setiap 30 menit
+// Register Module 1 Alarm recurring jobs via IRecurringJobManager
+using (var scope = app.Services.CreateScope())
+{
+    var jobManager = scope.ServiceProvider
+        .GetRequiredService<IRecurringJobManager>();
 
-RecurringJob.AddOrUpdate<Module1AlarmJob>(
-    "alarm-dropoff-unacknowledged",
-    j => j.CheckDropOffUnacknowledgedAsync(),
-    "*/15 * * * *"); // setiap 15 menit
+    jobManager.AddOrUpdate<Module1AlarmJob>(
+        "alarm-pre-arrival-timeout",
+        j => j.CheckPreArrivalTimeoutAsync(),
+        "*/30 * * * *");
 
-RecurringJob.AddOrUpdate<Module1AlarmJob>(
-    "alarm-sla-breach",
-    j => j.CheckSlaBreachAsync(),
-    "*/10 * * * *"); // setiap 10 menit
+    jobManager.AddOrUpdate<Module1AlarmJob>(
+        "alarm-dropoff-unacknowledged",
+        j => j.CheckDropOffUnacknowledgedAsync(),
+        "*/15 * * * *");
 
-RecurringJob.AddOrUpdate<Module1AlarmJob>(
-    "alarm-otp-expired",
-    j => j.CheckOtpExpiredAsync(),
-    "0 * * * *"); // setiap jam
+    jobManager.AddOrUpdate<Module1AlarmJob>(
+        "alarm-sla-breach",
+        j => j.CheckSlaBreachAsync(),
+        "*/10 * * * *");
 
-RecurringJob.AddOrUpdate<Module1AlarmJob>(
-    "alarm-floating-documents",
-    j => j.CheckFloatingDocumentsAsync(),
-    "0 8 * * *"); // setiap hari jam 8 pagi
+    jobManager.AddOrUpdate<Module1AlarmJob>(
+        "alarm-otp-expired",
+        j => j.CheckOtpExpiredAsync(),
+        "0 * * * *");
+
+    jobManager.AddOrUpdate<Module1AlarmJob>(
+        "alarm-floating-documents",
+        j => j.CheckFloatingDocumentsAsync(),
+        "0 8 * * *");
+}
 
 // Seed database
 await DbSeeder.SeedAsync(app.Services);
