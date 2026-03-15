@@ -1,3 +1,4 @@
+using Dtc.Application;
 namespace Dtc.Infrastructure.Services;
 
 using Microsoft.EntityFrameworkCore;
@@ -33,13 +34,13 @@ public class VendorService : IVendorService
         {
             Id = Guid.NewGuid(),
             SubmissionNumber = submissionNumber,
-            Title = request.Title,
-            Description = request.Description,
+            Title = request.Title.Sanitize(200) ?? request.Title,
+            Description = request.Description.Sanitize(1000),
             Status = VendorSubmissionStatus.Pending,
-            VendorCompanyName = request.VendorCompanyName,
-            VendorContactName = request.VendorContactName,
-            VendorContactEmail = request.VendorContactEmail,
-            VendorContactPhone = request.VendorContactPhone,
+            VendorCompanyName = request.VendorCompanyName.Sanitize(200) ?? request.VendorCompanyName,
+            VendorContactName = request.VendorContactName.Sanitize(100) ?? request.VendorContactName,
+            VendorContactEmail = request.VendorContactEmail.Sanitize(200) ?? request.VendorContactEmail,
+            VendorContactPhone = request.VendorContactPhone.Sanitize(20) ?? request.VendorContactPhone,
             ReferenceNumber = request.ReferenceNumber,
             DocumentDate = request.DocumentDate,
             DocumentValue = request.DocumentValue,

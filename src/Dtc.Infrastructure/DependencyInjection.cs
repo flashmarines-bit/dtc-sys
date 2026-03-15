@@ -1,4 +1,8 @@
 using Dtc.Application.Interfaces;
+using Microsoft.Extensions.Logging;
+using Polly;
+using Polly.Extensions.Http;
+using System.Net;
 using Dtc.Infrastructure.Persistence;
 using Dtc.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
@@ -37,7 +41,50 @@ public static class DependencyInjection
         services.AddScoped<IOcrService, OcrService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<ISystemSettingService, SystemSettingService>();
-        services.AddHttpClient("OcrService");
+        // OCR Service HttpClient dengan Polly retry + circuit breaker
+        services.AddHttpClient("OcrService", client =>
+        {
+            client.Timeout = TimeSpan.FromMinutes(21); // Sedikit lebih dari job timeout
+        })
+        .AddPolicyHandler((services, request) =>
+            HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .OrResult(r => r.StatusCode == HttpStatusCode.TooManyRequests)
+                .WaitAndRetryAsync(
+                    retryCount: 3,
+                    sleepDurationProvider: attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt)),
+                    onRetry: (outcome, timespan, attempt, ctx) =>
+                    {
+                        var logger = services.GetService<ILogger<OcrService>>();
+                        logger?.LogWarning(
+                            "OCR retry attempt {Attempt} after {Delay}s. Reason: {Reason}",
+                            attempt, timespan.TotalSeconds,
+                            outcome.Exception?.Message ?? outcome.Result?.StatusCode.ToString());
+                    }))
+        .AddPolicyHandler((services, request) =>
+            HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .CircuitBreakerAsync(
+                    handledEventsAllowedBeforeBreaking: 5,
+                    durationOfBreak: TimeSpan.FromSeconds(30),
+                    onBreak: (outcome, breakDelay) =>
+                    {
+                        var logger = services.GetService<ILogger<OcrService>>();
+                        logger?.LogError(
+                            "OCR Circuit OPEN for {Seconds}s. Last error: {Error}",
+                            breakDelay.TotalSeconds,
+                            outcome.Exception?.Message ?? outcome.Result?.StatusCode.ToString());
+                    },
+                    onReset: () =>
+                    {
+                        var logger = services.GetService<ILogger<OcrService>>();
+                        logger?.LogInformation("OCR Circuit CLOSED — service recovered");
+                    },
+                    onHalfOpen: () =>
+                    {
+                        var logger = services.GetService<ILogger<OcrService>>();
+                        logger?.LogWarning("OCR Circuit HALF-OPEN — testing recovery");
+                    }));
 
         return services;
     }

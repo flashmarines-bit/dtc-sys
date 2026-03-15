@@ -1,3 +1,5 @@
+using Serilog;
+using Serilog.Events;
 using Dtc.Infrastructure.Jobs;
 using Dtc.Api.Middleware;
 using Hangfire;
@@ -8,7 +10,21 @@ using Dtc.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
+
+try
+{
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((ctx, services, config) => config
+    .ReadFrom.Configuration(ctx.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("Application", "DTC-API"));
 
 // Add services
 builder.Services.AddControllers()
@@ -48,6 +64,7 @@ builder.Services.AddHangfire(config => config
     .UseRecommendedSerializerSettings()
     .UsePostgreSqlStorage(c => c.UseNpgsqlConnection(hangfireConn)));
 builder.Services.AddHangfireServer(options => options.WorkerCount = 2);
+builder.Services.AddScoped<HangfireJobFilter>();
 
 // JWT Authentication
 builder.Services.AddAuthentication(options =>
@@ -74,6 +91,13 @@ builder.Services.AddAuthorization();
 builder.Services.AddDtcRateLimiting();
 
 var app = builder.Build();
+
+// Hangfire dead letter filter
+using (var scope = app.Services.CreateScope())
+{
+    var filter = scope.ServiceProvider.GetRequiredService<HangfireJobFilter>();
+    Hangfire.GlobalJobFilters.Filters.Add(filter);
+}
 
 // Seed database
 await DbSeeder.SeedAsync(app.Services);
@@ -127,6 +151,9 @@ app.MapGet("/health", async (DtcDbContext db, IConfiguration config) =>
     });
 });
 
+app.UseSerilogRequestLogging(opts => {
+    opts.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+});
 app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseStatusCodePages(async ctx =>
 {
@@ -174,3 +201,12 @@ RecurringJob.AddOrUpdate<Dtc.Infrastructure.Jobs.AnalysisJob>(
     "0 2 * * *");
 
 app.Run();
+}
+catch (Exception ex) when (ex is not HostAbortedException)
+{
+    Log.Fatal(ex, "DTC API terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
