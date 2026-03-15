@@ -111,6 +111,32 @@ using (var scope = app.Services.CreateScope())
     Hangfire.GlobalJobFilters.Filters.Add(filter);
 }
 
+// Register Module 1 Alarm recurring jobs
+RecurringJob.AddOrUpdate<Module1AlarmJob>(
+    "alarm-pre-arrival-timeout",
+    j => j.CheckPreArrivalTimeoutAsync(),
+    "*/30 * * * *"); // setiap 30 menit
+
+RecurringJob.AddOrUpdate<Module1AlarmJob>(
+    "alarm-dropoff-unacknowledged",
+    j => j.CheckDropOffUnacknowledgedAsync(),
+    "*/15 * * * *"); // setiap 15 menit
+
+RecurringJob.AddOrUpdate<Module1AlarmJob>(
+    "alarm-sla-breach",
+    j => j.CheckSlaBreachAsync(),
+    "*/10 * * * *"); // setiap 10 menit
+
+RecurringJob.AddOrUpdate<Module1AlarmJob>(
+    "alarm-otp-expired",
+    j => j.CheckOtpExpiredAsync(),
+    "0 * * * *"); // setiap jam
+
+RecurringJob.AddOrUpdate<Module1AlarmJob>(
+    "alarm-floating-documents",
+    j => j.CheckFloatingDocumentsAsync(),
+    "0 8 * * *"); // setiap hari jam 8 pagi
+
 // Seed database
 await DbSeeder.SeedAsync(app.Services);
 

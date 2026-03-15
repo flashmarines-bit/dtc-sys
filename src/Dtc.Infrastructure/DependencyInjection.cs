@@ -1,4 +1,5 @@
 using Dtc.Application.Interfaces;
+using Dtc.Infrastructure.Jobs;
 using Dtc.Infrastructure.Notifications;
 using Microsoft.Extensions.Logging;
 using Polly;
@@ -68,6 +69,7 @@ public static class DependencyInjection
         services.AddScoped<ISystemSettingService, SystemSettingService>();
         services.AddScoped<IDynamicFormService, DynamicFormService>();
         services.AddScoped<IDocumentStateMachineService, DocumentStateMachineService>();
+        services.AddScoped<Module1AlarmJob>();
         // OCR Service HttpClient dengan Polly retry + circuit breaker
         services.AddHttpClient("OcrService", client =>
         {
