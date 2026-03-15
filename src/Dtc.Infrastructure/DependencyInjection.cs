@@ -32,6 +32,11 @@ public static class DependencyInjection
         services.AddScoped<ITrackingService, TrackingService>();
         services.AddScoped<IQrCodeService, QrCodeService>();
         services.AddScoped<ILibraryService, LibraryService>();
+        services.AddScoped<IVendorService, VendorService>();
+        services.AddScoped<IValidatorService, ValidatorService>();
+        services.AddScoped<IOcrService, OcrService>();
+        services.AddScoped<IEmailService, EmailService>();
+        services.AddHttpClient("OcrService");
 
         return services;
     }

@@ -1,3 +1,5 @@
+using Hangfire;
+using Hangfire.PostgreSql;
 using System.Text;
 using Dtc.Infrastructure;
 using Dtc.Infrastructure.Persistence;
@@ -13,6 +15,15 @@ builder.Services.AddSwaggerGen();
 
 // Infrastructure (DbContext + AuthService)
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// Hangfire
+var hangfireConn = builder.Configuration.GetConnectionString("DefaultConnection")!;
+builder.Services.AddHangfire(config => config
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UsePostgreSqlStorage(c => c.UseNpgsqlConnection(hangfireConn)));
+builder.Services.AddHangfireServer(options => options.WorkerCount = 2);
 
 // JWT Authentication
 builder.Services.AddAuthentication(options =>
@@ -61,5 +72,15 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Hangfire Dashboard (dev only)
+if (app.Environment.IsDevelopment())
+    app.UseHangfireDashboard("/hangfire");
+
+// Recurring cleanup job — setiap hari jam 02:00
+RecurringJob.AddOrUpdate<Dtc.Infrastructure.Jobs.AnalysisJob>(
+    "cleanup-expired-submissions",
+    job => job.CleanupExpiredAsync(),
+    "0 2 * * *");
 
 app.Run();
