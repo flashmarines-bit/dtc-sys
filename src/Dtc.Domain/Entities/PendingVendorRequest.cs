@@ -77,4 +77,13 @@ public class PendingVendorRequest : BaseEntity
 
     public Guid? ResultDocumentId { get; set; }
     public Document? ResultDocument { get; set; }
+
+    // Module 3 → Module 2 relasi
+    /// <summary>Nomor kontrak untuk dependency graph ke Library</summary>
+    public string? ContractNumber { get; set; }
+    /// <summary>Dynamic fields sesuai MetaSchema DocumentType</summary>
+    public string? DynamicData { get; set; }
+    /// <summary>ID dokumen library terkait (parent contract)</summary>
+    public Guid? RelatedLibraryDocumentId { get; set; }
+    public Document? RelatedLibraryDocument { get; set; }
 }

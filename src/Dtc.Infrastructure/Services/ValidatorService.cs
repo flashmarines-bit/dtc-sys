@@ -237,7 +237,8 @@ public class ValidatorService : IValidatorService
         s.ResultDocumentId, s.ResultDocument?.DocumentNumber,
         s.VendorUserId, s.VendorUser.FullName,
         s.ExpiresAt, s.CreatedAt, s.UpdatedAt,
-        s.ResubmissionCount, s.MaxResubmissions, s.ParentSubmissionId
+        s.ResubmissionCount, s.MaxResubmissions, s.ParentSubmissionId,
+            s.ContractNumber, s.DynamicData, s.RelatedLibraryDocumentId
     );
 
     public async Task<VendorSubmissionDto> ReturnForRevisionAsync(

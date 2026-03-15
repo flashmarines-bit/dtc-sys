@@ -41,6 +41,9 @@ public class VendorService : IVendorService
             VendorContactName = request.VendorContactName.Sanitize(100) ?? request.VendorContactName,
             VendorContactEmail = request.VendorContactEmail.Sanitize(200) ?? request.VendorContactEmail,
             VendorContactPhone = request.VendorContactPhone.Sanitize(20) ?? request.VendorContactPhone,
+            ContractNumber = request.ContractNumber?.Sanitize(100),
+            DynamicData = request.DynamicData,
+            RelatedLibraryDocumentId = request.RelatedLibraryDocumentId,
             ReferenceNumber = request.ReferenceNumber,
             DocumentDate = request.DocumentDate,
             DocumentValue = request.DocumentValue,
@@ -174,6 +177,7 @@ public class VendorService : IVendorService
         s.ResultDocumentId, s.ResultDocument?.DocumentNumber,
         s.VendorUserId, s.VendorUser.FullName,
         s.ExpiresAt, s.CreatedAt, s.UpdatedAt,
-        s.ResubmissionCount, s.MaxResubmissions, s.ParentSubmissionId
+        s.ResubmissionCount, s.MaxResubmissions, s.ParentSubmissionId,
+            s.ContractNumber, s.DynamicData, s.RelatedLibraryDocumentId
     );
 }

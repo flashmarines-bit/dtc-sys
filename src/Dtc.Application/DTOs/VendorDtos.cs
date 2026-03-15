@@ -49,7 +49,10 @@ public record VendorSubmissionDto(
     DateTime? UpdatedAt,
     int ResubmissionCount,
     int MaxResubmissions,
-    Guid? ParentSubmissionId
+    Guid? ParentSubmissionId,
+    string? ContractNumber,
+    string? DynamicData,
+    Guid? RelatedLibraryDocumentId
 );
 
 public record CreateVendorSubmissionRequest(
@@ -63,7 +66,10 @@ public record CreateVendorSubmissionRequest(
     string? ReferenceNumber,
     DateTime? DocumentDate,
     decimal? DocumentValue,
-    string? Notes
+    string? Notes,
+    string? ContractNumber,
+    string? DynamicData,
+    Guid? RelatedLibraryDocumentId
 );
 
 public record RejectSubmissionRequest(
