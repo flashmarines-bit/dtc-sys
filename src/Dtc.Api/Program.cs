@@ -86,13 +86,48 @@ if (app.Environment.IsDevelopment())
 }
 
 // Health check
-app.MapGet("/health", () => Results.Ok(new
+app.MapGet("/health", async (DtcDbContext db, IConfiguration config) =>
 {
-    status = "Healthy",
-    service = "DTC API",
-    timestamp = DateTime.UtcNow
-}));
+    var checks = new Dictionary<string, object>();
+    var allHealthy = true;
 
+    // DB check
+    try
+    {
+        await db.Database.CanConnectAsync();
+        checks["database"] = "healthy";
+    }
+    catch (Exception ex)
+    {
+        checks["database"] = $"unhealthy: {ex.Message}";
+        allHealthy = false;
+    }
+
+    // OCR service check
+    try
+    {
+        var ocrUrl = config["OcrService:BaseUrl"] ?? "http://localhost:8000";
+        using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
+        var resp = await http.GetAsync($"{ocrUrl}/health");
+        checks["ocr"] = resp.IsSuccessStatusCode ? "healthy" : "degraded";
+    }
+    catch
+    {
+        checks["ocr"] = "unavailable";
+        // OCR unavailable tidak block health — degraded mode
+    }
+
+    return Results.Ok(new
+    {
+        status = allHealthy ? "Healthy" : "Degraded",
+        service = "DTC API",
+        version = "1.0.0",
+        checks,
+        timestamp = DateTime.UtcNow
+    });
+});
+
+app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseStatusCodePages(async ctx =>
 {
     var res = ctx.HttpContext.Response;

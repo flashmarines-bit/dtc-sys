@@ -1,3 +1,4 @@
+using Dtc.Api.Middleware;
 using Microsoft.AspNetCore.RateLimiting;
 namespace Dtc.Api.Controllers;
 
@@ -61,8 +62,9 @@ public class VendorController : ControllerBase
         if (file.Length > maxSize)
             return BadRequest(new { error = $"File terlalu besar. Maximum 100MB." });
 
-        if (!file.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
-            return BadRequest(new { error = "Hanya file PDF yang diterima." });
+        // Validasi magic bytes — bukan hanya extension
+        if (!await file.IsPdfAsync())
+            return BadRequest(new { success = false, error = "File bukan PDF valid. Pastikan file adalah dokumen PDF asli.", statusCode = 400, timestamp = DateTime.UtcNow });
 
         var submission = await _db.PendingVendorRequests
             .FirstOrDefaultAsync(s => s.Id == id && s.VendorUserId == GetUserId());
@@ -88,9 +90,11 @@ public class VendorController : ControllerBase
         using var stream = file.OpenReadStream();
         await _storage.UploadAsync(storagePath, stream, "application/pdf");
 
+        var sha256 = await file.ComputeSha256Async();
         submission.OriginalStoragePath = storagePath;
         submission.FileName = file.FileName;
         submission.FileSizeBytes = file.Length;
+        submission.Sha256Hash = sha256;
         submission.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 

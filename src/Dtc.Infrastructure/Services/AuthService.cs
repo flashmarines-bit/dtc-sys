@@ -118,6 +118,8 @@ public class AuthService : IAuthService
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             Role = "Vendor",
             IsActive = true,
+            CompanyName = request.CompanyName,
+            ContactPhone = request.PhoneNumber,
             CreatedAt = DateTime.UtcNow
         };
 

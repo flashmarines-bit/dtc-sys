@@ -25,6 +25,7 @@ public class PendingVendorRequest : BaseEntity
     public string OriginalStoragePath { get; set; } = string.Empty;
     public string? SearchablePdfPath { get; set; }
     public string FileName { get; set; } = string.Empty;
+    public string? Sha256Hash { get; set; }
     public long FileSizeBytes { get; set; }
     public int PageCount { get; set; }
     public DpiCheckResult DpiCheckResult { get; set; } = DpiCheckResult.Unknown;
