@@ -1,0 +1,21 @@
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+WORKDIR /app
+EXPOSE 5000
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+COPY ["src/Dtc.Api/Dtc.Api.csproj", "src/Dtc.Api/"]
+COPY ["src/Dtc.Application/Dtc.Application.csproj", "src/Dtc.Application/"]
+COPY ["src/Dtc.Domain/Dtc.Domain.csproj", "src/Dtc.Domain/"]
+COPY ["src/Dtc.Infrastructure/Dtc.Infrastructure.csproj", "src/Dtc.Infrastructure/"]
+RUN dotnet restore "src/Dtc.Api/Dtc.Api.csproj"
+COPY . .
+RUN dotnet build "src/Dtc.Api/Dtc.Api.csproj" -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish "src/Dtc.Api/Dtc.Api.csproj" -c Release -o /app/publish
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "Dtc.Api.dll"]
