@@ -1,9 +1,9 @@
 # DTC SYSTEM — REVIEW, STATUS & RENCANA PENGEMBANGAN
 
-> **Dibuat:** 17 March 2026 14:59 WIB
+> **Dibuat:** 17 March 2026 20:15 WIB
 > **Versi Aplikasi:** 1.0.0
 > **Repository:** https://github.com/flashmarines-bit/dtc-sys
-> **Branch:** main | **Commit terakhir:** d360541
+> **Branch:** main | **Commit terakhir:** 07e0799
 > **Environment:** GitHub Codespace (Development)
 
 ---
@@ -24,6 +24,7 @@
 12. [Rencana Pengembangan Berikutnya](#12-rencana-pengembangan-berikutnya)
 13. [Arsitektur & Keputusan Teknis](#13-arsitektur--keputusan-teknis)
 14. [Panduan Menjalankan Aplikasi](#14-panduan-menjalankan-aplikasi)
+15. [Status Vendor Portal (frontend-vendor)](#15-status-vendor-portal-frontend-vendor)
 
 ---
 
@@ -36,10 +37,7 @@
 | Ocr | ⚠️ unavailable |
 
 - **API Version:** 1.0.0
-- **Timestamp:** 2026-03-17T14:56:44.2118623Z
-- **Port API:** 5000
-- **Port Frontend Internal:** 3000
-- **Port Vendor Portal (planned):** 4000
+- **Port API:** 5000 | **Frontend Internal:** 3000 | **Vendor Portal:** 4000
 
 ---
 
@@ -90,29 +88,27 @@
 - 2: 1 dokumen
 - 5: 4 dokumen
 
-**Daftar Dokumen (20 terbaru):**
-
-| No | Nomor Dokumen | Judul | Status | Pemegang |
-|----|--------------|-------|--------|----------|
-| 1 | DOC-2026-00003 | Test Email Notifikasi | ? | - |
-| 2 | DOC-2026-00002 | Test Email Notification | ? | - |
-| 3 | DOC-2026-00001 | SPPP Test | ? | - |
-| 4 | PHY-2026-00004 | Standard Operating Procedure - Well | ? | - |
-| 5 | PHY-2026-00003 | Dokumen Handover Test | ? | - |
-| 6 | PHY-2026-00002 | Surat Penawaran Harga | ? | - |
-| 7 | PHY-2026-00001 | Test Surat Masuk Vendor ABC | ? | - |
-| 8 | 0002/SP3/PHR14410/2026-S0 | SP3 Repair Compressor | ? | - |
-| 9 | 0001/SP3/PHR14410/2026-S0 | SP3 Maintenance Pump A | ? | - |
-| 10 | MEMO/2026/0001 | Internal Memo - Q1 Review | ? | - |
-| 11 | INV/2026/PROC/00002 | Invoice Vendor B - March 2026 | ? | - |
-| 12 | INV/2026/PROC/00001 | Invoice Vendor A - March 2026 | ? | - |
+| No | Nomor Dokumen | Judul | Status |
+|----|--------------|-------|--------|
+| 1 | DOC-2026-00003 | Test Email Notifikasi | ? |
+| 2 | DOC-2026-00002 | Test Email Notification | ? |
+| 3 | DOC-2026-00001 | SPPP Test | ? |
+| 4 | PHY-2026-00004 | Standard Operating Procedure - Well Dril | ? |
+| 5 | PHY-2026-00003 | Dokumen Handover Test | ? |
+| 6 | PHY-2026-00002 | Surat Penawaran Harga | ? |
+| 7 | PHY-2026-00001 | Test Surat Masuk Vendor ABC | ? |
+| 8 | 0002/SP3/PHR14410/2026-S0 | SP3 Repair Compressor | ? |
+| 9 | 0001/SP3/PHR14410/2026-S0 | SP3 Maintenance Pump A | ? |
+| 10 | MEMO/2026/0001 | Internal Memo - Q1 Review | ? |
+| 11 | INV/2026/PROC/00002 | Invoice Vendor B - March 2026 | ? |
+| 12 | INV/2026/PROC/00001 | Invoice Vendor A - March 2026 | ? |
 
 ---
 
 ## 5. E-LIBRARY — MODUL 2 (5 dokumen)
 
-| No | Nomor | Judul | Tipe Dokumen | Status Library |
-|----|-------|-------|-------------|----------------|
+| No | Nomor | Judul | Tipe | Status |
+|----|-------|-------|------|--------|
 | 1 | DOC-2026-00003 | Test Email Notifikasi | Surat Permintaan Proses Pembayaran | Approved |
 | 2 | DOC-2026-00002 | Test Email Notification | Surat Permintaan Proses Pembayaran | Approved |
 | 3 | DOC-2026-00001 | SPPP Test | Surat Permintaan Proses Pembayaran | Approved |
@@ -128,54 +124,45 @@
 - Accepted: 3
 - Rejected: 1
 
-**Daftar Submission:**
-
-| No | Nomor | Judul | Vendor | Status | AI Score | Resubmisi |
-|----|-------|-------|--------|--------|----------|-----------|
-| 1 | REQ-2026-00004 | Test Email Notifikasi | PT Email Test | Accepted | 10 | 0/0 |
-| 2 | REQ-2026-00003 | Test Email Notification | PT Email Test | Accepted | 10 | 0/0 |
-| 3 | REQ-2026-00002 | SPPP Test Reject | PT Reject Test | Rejected | 10 | 0/0 |
-| 4 | REQ-2026-00001 | SPPP Test | PT Test | Accepted | 10 | 0/0 |
+| No | Nomor | Judul | Vendor | Status | AI Score |
+|----|-------|-------|--------|--------|----------|
+| 1 | REQ-2026-00004 | Test Email Notifikasi | PT Email Test | Accepted | 10 |
+| 2 | REQ-2026-00003 | Test Email Notification | PT Email Test | Accepted | 10 |
+| 3 | REQ-2026-00002 | SPPP Test Reject | PT Reject Test | Rejected | 10 |
+| 4 | REQ-2026-00001 | SPPP Test | PT Test | Accepted | 10 |
 
 ---
 
 ## 7. ANTRIAN VALIDATOR (4 submission)
 
-- **Siap direview:** 0
-- **Sedang dianalisis:** 4
-
-| No | Nomor | Vendor | Status | AI Score | DPI |
-|----|-------|--------|--------|----------|-----|
-| 1 | REQ-2026-00009 | PT Maju Jaya | Pending | None | None ❌ |
-| 2 | REQ-2026-00010 | PT Test | Pending | None | None ❌ |
-| 3 | REQ-2026-00011 | PT Hack | Pending | None | None ❌ |
-| 4 | REQ-2026-00012 | PT Test 14b0e7da | Pending | None | None ❌ |
+| No | Nomor | Vendor | Status | AI Score |
+|----|-------|--------|--------|----------|
+| 1 | REQ-2026-00009 | PT Maju Jaya | Pending | None |
+| 2 | REQ-2026-00010 | PT Test | Pending | None |
+| 3 | REQ-2026-00011 | PT Hack | Pending | None |
+| 4 | REQ-2026-00012 | PT Test 14b0e7da | Pending | None |
 
 ---
 
 ## 8. DASHBOARD RADAR
 
-**Overview Tracking:**
-
 | Metrik | Nilai |
 |--------|-------|
-| Total Dokumen Aktif | 5 |
+| Total Aktif | 5 |
 | Pre-Arrival | 1 |
 | Di Front Desk | 0 |
 | Menunggu Konfirmasi | 4 |
 | Sedang Direview | 0 |
-| Dititip Pending | 0 |
-| Menunggu Pickup | 0 |
+| droppedPendingAck | 0 |
+| waitingPickup | 0 |
 | SLA Breach | 0 |
-| Eskalasi Terkirim | 0 |
-
-**Eskalasi Aktif:** 0
+| Eskalasi | 0 |
 
 ---
 
 ## 9. ORGANIZATION FUNCTIONS (0)
 
-*Belum ada org function. Perlu dikonfigurasi untuk penomoran dokumen otomatis.*
+*Belum ada org function — perlu dikonfigurasi untuk penomoran otomatis.*
 
 ---
 
@@ -183,7 +170,7 @@
 
 | Key | Value | Keterangan |
 |-----|-------|------------|
-| `Email:AppPassword` | cakdtanhmgpdcmpr | Gmail App Password |
+| `Email:AppPassword` | ****** (disembunyikan) | Gmail App Password |
 | `Email:SenderEmail` | ylsusanto@gmail.com | Sender email address |
 | `Email:SenderName` | DTC System | Display name |
 | `Email:SmtpPort` | 587 | SMTP Port |
@@ -198,124 +185,132 @@
 
 | # | Layer | File | Bug |
 |---|-------|------|-----|
-| 1 | Frontend | `proxy.ts` | Middleware deprecated di Next.js 16 — nama fungsi salah |
-| 2 | Frontend | `api.ts` | window.location.href tanpa SSR guard — crash di Server Component |
-| 3 | Frontend | `types/index.ts` | Role FrontDesk tidak terdefinisi di interface User |
-| 4 | Frontend | `types/index.ts` | returnNotes tidak ada di VendorSubmission interface |
-| 5 | Frontend | `dashboard/page.tsx` | Route /documents/[id]/scan tidak ada — 404 untuk Validator |
-| 6 | Frontend | `dashboard/page.tsx` | Role User tidak punya UI section — layar blank |
-| 7 | Frontend | `vendor/submissions/[id]` | Stale closure di auto-refresh — status Analysing tidak update |
-| 8 | Frontend | `vendor/submissions/[id]` | (sub as any).returnNotes — type unsafe |
-| 9 | Frontend | `validator/review/[id]` | Tidak ada pesan saat status Pending/Analysing — UI bisu |
-| 10 | Backend | `AuthService.cs` | ExpiresAt hardcode 60 menit — tidak baca dari config |
-| 11 | Backend | `Program.cs` | CORS URL Codespace hardcoded — API block setelah restart |
-| 12 | Backend | `DocumentTypesController.cs` | Duplicate using directive — build warning |
-| 13 | Backend | `VendorController.cs` | File minimum 1KB — harusnya 5MB untuk production |
-| 14 | Backend | `ValidatorController.cs` | Approve/Reject tanpa role authorization — siapapun bisa approve |
-| 15 | Backend | `TrackingController.cs` | Receive/Assign/Approve tanpa role check spesifik |
-| 16 | Backend | `VendorService.cs` | Race condition GenerateSubmissionNumberAsync — nomor duplikat |
-| 17 | Backend | `VendorService.cs` | Form tidak auto-fill dari user yang login |
-| 18 | Backend | `ValidatorService.cs` | GetQueueAsync hanya UnderReview — counter Analysing selalu 0 |
-| 19 | Backend | `ValidatorService.cs` | Race condition GenerateDocumentNumberAsync — nomor duplikat |
+| 1 | Frontend | `proxy.ts` | Middleware deprecated di Next.js 16 |
+| 2 | Frontend | `api.ts` | window.location.href tanpa SSR guard |
+| 3 | Frontend | `types/index.ts` | Role FrontDesk tidak terdefinisi |
+| 4 | Frontend | `types/index.ts` | returnNotes tidak ada di VendorSubmission |
+| 5 | Frontend | `dashboard/page.tsx` | Route /documents/[id]/scan → 404 |
+| 6 | Frontend | `dashboard/page.tsx` | Role User layar blank |
+| 7 | Frontend | `vendor/submissions/[id]` | Stale closure auto-refresh |
+| 8 | Frontend | `vendor/submissions/[id]` | (sub as any).returnNotes type unsafe |
+| 9 | Frontend | `validator/review/[id]` | UI bisu saat Pending/Analysing |
+| 10 | Backend | `AuthService.cs` | ExpiresAt hardcode 60 menit |
+| 11 | Backend | `Program.cs` | CORS URL hardcoded |
+| 12 | Backend | `DocumentTypesController.cs` | Duplicate using directive |
+| 13 | Backend | `VendorController.cs` | File minimum 1KB harusnya 5MB |
+| 14 | Backend | `ValidatorController.cs` | Approve/Reject tanpa role check |
+| 15 | Backend | `TrackingController.cs` | Receive/Assign/Approve tanpa role check |
+| 16 | Backend | `VendorService.cs` | Race condition nomor submission |
+| 17 | Backend | `VendorService.cs` | Form tidak auto-fill dari user login |
+| 18 | Backend | `ValidatorService.cs` | GetQueueAsync hanya UnderReview |
+| 19 | Backend | `ValidatorService.cs` | Race condition nomor dokumen |
 
 ### ✅ Fitur Baru yang Diimplementasikan
 
 #### 17 Tema Warna
-CSS variables dengan dark/light mode. Tema: Blue, Purple, Green, Orange, Rose, Teal, Slate, Indigo, Cyan, Amber, Lime, Pink, Red, Emerald, Violet, Midnight, Forest. Tersimpan per user di localStorage.
+CSS variables dark/light mode. Blue, Purple, Green, Orange, Rose, Teal, Slate, Indigo, Cyan, Amber, Lime, Pink, Red, Emerald, Violet, Midnight, Forest. Tersimpan per user di localStorage dengan key `dtc-color-theme-{userId}`.
 
 #### Halaman /home (Module Selector)
-Landing page setelah login dengan card besar per modul. Filter otomatis berdasarkan role. Greeting personal, quick links admin.
+Landing page setelah login. Card besar per modul, filter berdasarkan role, greeting personal, quick links admin.
 
 #### Navbar Module Switcher
-Modul 1/2/3 dipindah dari sidebar ke navbar atas sebagai segmented control. Highlight aktif, warna berbeda per modul. Sidebar tetap untuk menu dalam modul.
+Modul 1/2/3 di navbar atas sebagai segmented control rata kanan. Sidebar tetap untuk menu dalam modul aktif.
 
 #### Multi-Role Support (Database)
-Kolom Role (varchar) diganti Roles (jsonb array). Migration dengan konversi data otomatis. JWT multiple role claims.
+Kolom `Roles` bertipe JSONB array. Migration `AddMultiRoleSupport` dengan konversi data otomatis. JWT multiple role claims.
 
 #### Multi-Role Support (Frontend)
-Interface User dengan roles: string[]. Multi-role checkbox selector di User Management. Role eksklusif tidak bisa dikombinasi.
+`roles: string[]` di interface User. Multi-role checkbox selector di User Management. Role eksklusif (SysAdmin, Vendor) tidak bisa dikombinasi.
 
 #### Role Baru: Verificator
-Role untuk verifikasi fisik dokumen. Akses Modul 1 + Modul 2. Dapat dikombinasi dengan Validator untuk akses penuh.
+Akses Modul 1 + Modul 2. Dapat dikombinasi dengan Validator untuk akses penuh 3 modul.
 
 #### User Management UI
-Tampilan baru dengan multi-role checkbox. Deskripsi tiap role. Dialog lebih lebar tanpa scroll di desktop.
+Multi-role checkbox dengan deskripsi tiap role. Dialog 2-kolom lebih lebar tanpa scroll di desktop.
 
-#### Akses Kontrol Berbasis Kombinasi Role
-Modul ditampilkan berdasarkan semua roles user. Validator+Verificator = akses 3 modul. Logic di frontend membaca roles array.
+#### Akses Kontrol Multi-Role
+Frontend membaca `roles` array. Validator+Verificator = 3 modul. Setiap kombinasi role menghasilkan akses modul yang tepat.
 
-### ✅ Infrastruktur & Konfigurasi
+### ✅ Infrastruktur
 
-- CORS dikonfigurasi dari appsettings (tidak hardcode)
-- JWT Key minimal 64 karakter (HS512 requirement)
-- appsettings.Development.json template tersedia
-- DbSeeder otomatis fix format data Roles lama
-- Build 0 error, 0 warning di backend dan frontend
-- Semua perubahan di-commit dan di-push ke GitHub
+- CORS dikonfigurasi dari appsettings — tidak hardcode
+- JWT Key minimal 64 karakter (HS512)
+- DbSeeder otomatis fix format data Roles lama (jsonb)
+- Build 0 error, 0 warning backend dan frontend
+- Semua perubahan di-commit dan push ke GitHub (commit: 07e0799)
 
 ---
 
 ## 12. RENCANA PENGEMBANGAN BERIKUTNYA
 
-### 🔲 PRIORITAS 1 — Vendor Portal Terpisah (Port 4000)
+### 🔲 PRIORITAS 1 — Vendor Portal (Port 4000) — SEDANG DIKERJAKAN
 
-**Latar Belakang:** Keputusan arsitektur sudah final — vendor akan mengakses sistem melalui frontend terpisah di port 4000 dengan URL berbeda dari frontend internal.
+**Status saat ini:** File-file project sudah dibuat manual, npm install sedang berjalan.
 
-**Yang perlu dibuat:**
+**File yang sudah dibuat di `frontend-vendor/`:**
 
-- Inisiasi project Next.js baru di folder `frontend-vendor/`
-- Konfigurasi port 4000 di package.json
-- Halaman Login khusus vendor (email + password)
-- Halaman Register vendor (dengan validasi perusahaan)
-- Halaman Daftar Submission — lihat semua pengajuan
-- Halaman New Submission — upload PDF, isi form
-- Halaman Detail Submission — status, AI result, resubmit
-- Halaman Profile vendor
-- Update CORS backend: tambah port 4000 ke AllowedOrigins
-- Update proxy.ts agar redirect vendor ke /login yang benar
+- `package.json` — port 4000, dependency sama dengan frontend internal
+- `tsconfig.json` — konfigurasi TypeScript
+- `next.config.ts` — rewrite proxy ke port 5000
+- `.env.local` — NEXT_PUBLIC_API_URL=http://localhost:5000
+- `postcss.config.mjs` — Tailwind CSS v4
+- `middleware.ts` — proteksi route, redirect vendor_token
+- `app/globals.css` — CSS variables (light/dark mode)
+- `app/layout.tsx` — root layout dengan PWA metadata
+- `app/page.tsx` — redirect ke /login
+- `app/login/page.tsx` — halaman login khusus vendor
+- `app/register/page.tsx` — halaman register vendor
+- `app/submissions/page.tsx` — daftar submission + stats
+- `app/submissions/new/page.tsx` — form pengajuan baru + upload PDF
+- `app/submissions/[id]/page.tsx` — detail + AI result + resubmit
+- `app/profile/page.tsx` — profil + ganti password + logout
+- `components/layout/Shell.tsx` — navbar + mobile bottom nav
+- `lib/api.ts` — axios client dengan vendor_token cookie
+- `lib/utils.ts` — cn, formatDate, formatFileSize, getStatusColor
+- `store/auth.ts` — zustand auth store (vendor_token)
+- `types/index.ts` — User, VendorSubmission, DocumentType interfaces
+- `public/manifest.json` — PWA manifest
+
+**Yang masih perlu dikerjakan:**
+
+- npm install selesai dan verifikasi
+- npm run dev — jalankan di port 4000
 - Set port 4000 public di Codespace
-- Nginx config untuk routing subdomain di production
+- Test login vendor di browser
+- Test register vendor baru
+- Test submit dokumen PDF
+- Test detail dan resubmit
+- Commit dan push ke GitHub
 
-**Potensi masalah yang perlu diantisipasi:**
+### 🔲 PRIORITAS 2 — Penyempurnaan Modul 3
 
-- Cookie tidak shared antar port/subdomain — perlu konfigurasi domain
-- CORS harus diupdate di dua tempat saat URL Codespace berubah
-- PWA manifest perlu dikonfigurasi terpisah
+- Multi-file upload
+- Preview PDF di browser
+- Draft submission
+- Notifikasi WebSocket
 
-### 🔲 PRIORITAS 2 — Penyempurnaan Modul 3 (Vendor Submission)
+### 🔲 PRIORITAS 3 — UI/UX
 
-- Multi-file upload (saat ini hanya 1 PDF per submission)
-- Preview PDF langsung di browser tanpa download
-- Template dokumen yang bisa diisi vendor secara online
-- Draft submission — vendor bisa simpan sebelum final submit
-- Notifikasi real-time via WebSocket saat status berubah
-- History timeline submission yang lebih detail
-
-### 🔲 PRIORITAS 3 — Penyempurnaan UI/UX
-
-- Tema warna disimpan di database (bukan hanya localStorage) agar sync antar browser
-- Mobile responsiveness lebih baik untuk halaman tracking
-- Loading skeleton untuk semua halaman (saat ini hanya spinner)
-- Error boundary yang lebih informatif
-- Perbaikan tampilan halaman Documents (masih hardcode warna slate)
-- Tambah konfirmasi dialog sebelum aksi destruktif (hapus, tolak)
+- Tema warna ke database
+- Loading skeleton
+- Error boundary
+- Fix halaman Documents (hardcode slate)
 
 ### 🔲 PRIORITAS 4 — Keamanan
 
-- Rate limiting lebih ketat untuk endpoint vendor
-- Audit log setiap aksi penting (approve, reject, delete)
-- Session timeout lebih pendek untuk Vendor (30 menit vs 60 menit internal)
-- 2FA opsional untuk SysAdmin dan Admin
-- IP whitelist opsional untuk akses admin panel
+- Rate limiting vendor
+- Audit log
+- Session timeout berbeda vendor vs internal
+- 2FA admin
 
 ### 🔲 MODUL BARU (Jangka Panjang)
 
 | Modul | Deskripsi | Prioritas |
 |-------|-----------|-----------|
-| Modul 4 — Outgoing Documents | Surat keluar internal ke pihak luar, penomoran otomatis | Medium |
-| Modul 5 — Retention & Compliance | Manajemen masa retensi sesuai regulasi | Low |
-| Modul 6 — Analytics & Reporting | Dashboard laporan dan visualisasi semua modul | Medium |
-| Modul 7 — Incoming Registry | Pencatatan surat masuk umum dengan disposisi | Low |
+| Modul 4 — Outgoing Documents | Surat keluar internal | Medium |
+| Modul 5 — Retention & Compliance | Manajemen retensi | Low |
+| Modul 6 — Analytics & Reporting | Dashboard laporan | Medium |
+| Modul 7 — Incoming Registry | Surat masuk + disposisi | Low |
 
 ---
 
@@ -327,30 +322,29 @@ Modul ditampilkan berdasarkan semua roles user. Validator+Verificator = akses 3 
 |-------|-----------|-------|------|
 | Backend API | .NET / ASP.NET Core | 10.0 | 5000 |
 | Frontend Internal | Next.js + React + TypeScript | 16.1.6 | 3000 |
-| Frontend Vendor (planned) | Next.js terpisah | 16.x | 4000 |
+| **Frontend Vendor** | **Next.js terpisah** | **16.1.6** | **4000** |
 | Database | PostgreSQL via Supabase | Latest | 5432 |
-| ORM | Entity Framework Core | 10.x | - |
-| Background Jobs | Hangfire + PostgreSQL | 1.8x | - |
-| OCR Service | Python FastAPI | - | 8000 |
+| ORM | Entity Framework Core + JSONB | 10.x | - |
+| Background Jobs | Hangfire | 1.8x | - |
+| OCR Service | Python FastAPI | - | 8000 ⚠️ |
 | Auth | JWT Bearer HS512 | - | - |
-| CSS | Tailwind CSS v4 + shadcn/ui | 4.x | - |
-| State | Zustand + React Query | 5.x | - |
+| CSS | Tailwind CSS v4 + CSS variables | 4.x | - |
+| State | Zustand v5 | 5.x | - |
 
 ### Keputusan Arsitektur yang Sudah Final
 
 | Keputusan | Detail |
 |-----------|--------|
-| Multi-role support | JSONB array di database (Opsi A) — sudah implemented |
+| Multi-role | JSONB array — sudah implemented dan production-ready |
 | Vendor portal | Frontend terpisah port 4000, backend & DB sama |
-| Database | Tetap satu instance — tidak dipisah untuk simplisitas |
-| Role Verificator | Sudah ada, bisa dikombinasi dengan Validator |
-| 3 modul utama | Dipertahankan, modul baru dikembangkan bertahap |
-| Tema warna | 17 tema, tersimpan per user di localStorage |
+| Database | Satu instance Supabase — tidak dipisah |
+| Cookie auth | `vendor_token` untuk vendor, `dtc_token` untuk internal |
+| Role Verificator | Sudah ada, kombinasi Validator+Verificator = akses penuh |
 
 ### Akses Modul Per Role
 
-| Role | Modul 1 (Tracking) | Modul 2 (Library) | Modul 3 (Vendor) |
-|------|--------------------|-------------------|-----------------|
+| Role | Modul 1 Tracking | Modul 2 Library | Modul 3 Vendor |
+|------|-----------------|----------------|----------------|
 | SysAdmin | ✅ | ✅ | ✅ |
 | Admin | ✅ | ✅ | ✅ |
 | Validator | ❌ | ✅ | ✅ |
@@ -366,23 +360,33 @@ Modul ditampilkan berdasarkan semua roles user. Validator+Verificator = akses 3 
 ### Di GitHub Codespace
 
 ```bash
-# 1. Update CORS dengan URL Codespace baru
-# Edit: src/Dtc.Api/appsettings.Development.json
+# Kill semua proses lama
+pkill -f dotnet 2>/dev/null && pkill -f next 2>/dev/null && sleep 3
 
-# 2. Jalankan Backend
-pkill -f dotnet 2>/dev/null
+# Backend API
 cd /workspaces/dtc-sys && dotnet run --project src/Dtc.Api --urls "http://localhost:5000" > /tmp/api.log 2>&1 &
 
-# 3. Jalankan Frontend Internal
+# Frontend Internal (port 3000)
 cd /workspaces/dtc-sys/frontend && npm run dev > /tmp/next.log 2>&1 &
 
-# 4. Set Port Public
-gh codespace ports visibility 3000:public -c $CODESPACE_NAME
-gh codespace ports visibility 5000:public -c $CODESPACE_NAME
+# Frontend Vendor (port 4000)
+cd /workspaces/dtc-sys/frontend-vendor && npm run dev > /tmp/vendor.log 2>&1 &
 
-# 5. Health Check
+# Set semua port public
+gh codespace ports visibility 3000:public 5000:public 4000:public -c $CODESPACE_NAME
+
+# Health check
 curl -s http://localhost:5000/health | python3 -m json.tool
 ```
+
+### URL Akses
+
+| Aplikasi | URL |
+|----------|-----|
+| Frontend Internal | https://{CODESPACE}-3000.app.github.dev |
+| Vendor Portal | https://{CODESPACE}-4000.app.github.dev |
+| Backend API | https://{CODESPACE}-5000.app.github.dev |
+| Swagger | https://{CODESPACE}-5000.app.github.dev/swagger |
 
 ### Credentials Development
 
@@ -392,10 +396,67 @@ curl -s http://localhost:5000/health | python3 -m json.tool
 | Ahmad Validator | validator@dtc.local | Validator@123 | Validator |
 | Budi Verificator | verificator@dtc.local | Verif@123 | Verificator |
 | Siti Val+Verif | valverif@dtc.local | ValVerif@123 | Validator + Verificator |
+| PT Maju Jaya (Vendor) | vendor@majujaya.com | (cek database) | Vendor |
 
 > ⚠️ **WAJIB diganti sebelum production deployment!**
 
 ---
 
-*Dokumen ini dibuat otomatis dari data real-time DTC System pada 17 March 2026 14:59 WIB*
-*Generator: Claude AI — berdasarkan data API dan histori pengembangan*
+## 15. STATUS VENDOR PORTAL (frontend-vendor)
+
+
+### Struktur File yang Sudah Dibuat
+
+```
+frontend-vendor/
+├── package.json              ✅ port 4000
+├── tsconfig.json             ✅
+├── next.config.ts            ✅ rewrite proxy ke :5000
+├── postcss.config.mjs        ✅ Tailwind v4
+├── middleware.ts              ✅ proteksi route vendor_token
+├── .env.local                 ✅ NEXT_PUBLIC_API_URL
+├── public/
+│   └── manifest.json         ✅ PWA config
+├── app/
+│   ├── globals.css           ✅ CSS variables light/dark
+│   ├── layout.tsx            ✅ root layout
+│   ├── page.tsx              ✅ redirect /login
+│   ├── login/page.tsx        ✅ login vendor
+│   ├── register/page.tsx     ✅ register vendor baru
+│   ├── submissions/
+│   │   ├── page.tsx          ✅ dashboard + daftar submission
+│   │   ├── new/page.tsx      ✅ form + upload PDF
+│   │   └── [id]/page.tsx     ✅ detail + AI result + resubmit
+│   └── profile/page.tsx      ✅ profil + ganti password
+├── components/
+│   └── layout/Shell.tsx      ✅ navbar + mobile bottom nav
+├── lib/
+│   ├── api.ts                ✅ axios + vendor_token
+│   └── utils.ts              ✅ helpers
+├── store/
+│   └── auth.ts               ✅ zustand auth
+└── types/
+    └── index.ts              ✅ TypeScript interfaces
+```
+
+### Langkah Berikutnya (Sesi Selanjutnya)
+
+```bash
+# 1. Verifikasi npm install selesai
+ls /workspaces/dtc-sys/frontend-vendor/node_modules | head -5
+
+# 2. Jalankan dev server
+cd /workspaces/dtc-sys/frontend-vendor && npm run dev > /tmp/vendor.log 2>&1 &
+sleep 15 && curl -s http://localhost:4000 | head -3
+
+# 3. Set port 4000 public
+gh codespace ports visibility 4000:public -c $CODESPACE_NAME
+
+# 4. Test di browser
+# https://{CODESPACE}-4000.app.github.dev/login
+```
+
+---
+
+*Dokumen ini dibuat otomatis dari data real-time DTC System pada 17 March 2026 20:15 WIB*
+*Generator: Claude AI — data API + histori pengembangan sesi ini*
