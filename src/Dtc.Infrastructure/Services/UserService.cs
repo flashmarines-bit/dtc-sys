@@ -34,7 +34,7 @@ public class UserService : IUserService
             .OrderBy(u => u.FullName)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(u => new UserDto(u.Id, u.FullName, u.Email, u.Role, u.IsActive))
+            .Select(u => new UserDto(u.Id, u.FullName, u.Email, u.PrimaryRole, u.IsActive))
             .ToListAsync();
 
         return new UserListResponse(totalCount, page, pageSize, users);
@@ -45,14 +45,15 @@ public class UserService : IUserService
         var user = await _db.Users.FindAsync(id);
         if (user is null || user.IsDeleted) return null;
 
-        return new UserDto(user.Id, user.FullName, user.Email, user.Role, user.IsActive);
+        return new UserDto(user.Id, user.FullName, user.Email, user.PrimaryRole, user.IsActive);
     }
 
     public async Task<UserDto> CreateUserAsync(CreateUserRequest request)
     {
         // Validate role
-        if (!Roles.All.Contains(request.Role))
-            throw new ArgumentException($"Invalid role: {request.Role}. Valid roles: {string.Join(", ", Roles.All)}");
+        var invalidRoles = (request.Roles ?? []).Where(r => !Roles.All.Contains(r)).ToList();
+        if (invalidRoles.Count > 0)
+            throw new ArgumentException($"Invalid roles: {string.Join(", ", invalidRoles)}. Valid roles: {string.Join(", ", Roles.All)}");
 
         // Check duplicate email
         var exists = await _db.Users.AnyAsync(u => u.Email == request.Email && !u.IsDeleted);
@@ -65,7 +66,7 @@ public class UserService : IUserService
             FullName = request.FullName,
             Email = request.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-            Role = request.Role,
+            Roles = request.Roles ?? ["User"],
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -73,7 +74,7 @@ public class UserService : IUserService
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
 
-        return new UserDto(user.Id, user.FullName, user.Email, user.Role, user.IsActive);
+        return new UserDto(user.Id, user.FullName, user.Email, user.PrimaryRole, user.IsActive);
     }
 
     public async Task<UserDto?> UpdateUserAsync(Guid id, UpdateUserRequest request)
@@ -93,11 +94,12 @@ public class UserService : IUserService
             user.Email = request.Email;
         }
 
-        if (request.Role is not null)
+        if (request.Roles is not null && request.Roles.Count > 0)
         {
-            if (!Roles.All.Contains(request.Role))
-                throw new ArgumentException($"Invalid role: {request.Role}");
-            user.Role = request.Role;
+            var invalidRoles = request.Roles.Where(r => !Roles.All.Contains(r)).ToList();
+            if (invalidRoles.Count > 0)
+                throw new ArgumentException($"Invalid roles: {string.Join(", ", invalidRoles)}");
+            user.Roles = request.Roles;
         }
 
         if (request.IsActive.HasValue)
@@ -106,7 +108,7 @@ public class UserService : IUserService
         user.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
-        return new UserDto(user.Id, user.FullName, user.Email, user.Role, user.IsActive);
+        return new UserDto(user.Id, user.FullName, user.Email, user.PrimaryRole, user.IsActive);
     }
 
     public async Task<bool> DeleteUserAsync(Guid id)

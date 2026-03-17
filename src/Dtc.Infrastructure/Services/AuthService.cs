@@ -53,7 +53,7 @@ public class AuthService : IAuthService
             FullName = request.FullName,
             Email = request.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-            Role = "User",
+            Roles = ["User"],
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -116,7 +116,7 @@ public class AuthService : IAuthService
             FullName = request.FullName,
             Email = request.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-            Role = "Vendor",
+            Roles = ["Vendor"],
             IsActive = true,
             CompanyName = request.CompanyName,
             ContactPhone = request.PhoneNumber,
@@ -141,21 +141,25 @@ public class AuthService : IAuthService
             Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
 
-        var claims = new[]
+        // FIX: Multi-role — tambah satu claim per role
+        var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim(ClaimTypes.Name, user.FullName),
-            new Claim(ClaimTypes.Role, user.Role),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
+        // Tambah setiap role sebagai claim terpisah
+        foreach (var role in user.Roles)
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        var claimsArray = claims.ToArray();
 
         var expiryMinutes = int.Parse(_config["Jwt:ExpiryMinutes"] ?? "60");
 
         var token = new JwtSecurityToken(
             issuer: _config["Jwt:Issuer"],
             audience: _config["Jwt:Audience"],
-            claims: claims,
+            claims: claimsArray,
             expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
             signingCredentials: creds
         );
@@ -182,7 +186,7 @@ public class AuthService : IAuthService
                 Id: user.Id,
                 FullName: user.FullName,
                 Email: user.Email,
-                Role: user.Role,
+                Role: user.PrimaryRole, // primary role untuk display
                 IsActive: user.IsActive
             )
         );

@@ -80,10 +80,15 @@ public class NotificationService : INotificationService
     public async Task<NotificationResult> BroadcastToRoleAsync(
         string role, NotificationRequest request)
     {
-        var userIds = await _db.Users
-            .Where(u => u.Role == role && u.IsActive && !u.IsDeleted)
-            .Select(u => u.Id)
+        // FIX: AsEnumerable() tidak support async — load ke memory dulu
+        var allUsers = await _db.Users
+            .Where(u => u.IsActive && !u.IsDeleted)
+            .Select(u => new { u.Id, u.Roles })
             .ToListAsync();
+        var userIds = allUsers
+            .Where(u => u.Roles.Contains(role))
+            .Select(u => u.Id)
+            .ToList();
 
         return await BroadcastAsync(userIds, request);
     }

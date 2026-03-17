@@ -11,13 +11,13 @@ public record CreateUserRequest(
     string FullName,
     string Email,
     string Password,
-    string Role
+    List<string> Roles  // multi-role
 );
 
 public record UpdateUserRequest(
     string? FullName,
     string? Email,
-    string? Role,
+    List<string>? Roles,  // multi-role
     bool? IsActive
 );
 
