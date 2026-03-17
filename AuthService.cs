@@ -103,7 +103,6 @@ public class AuthService : IAuthService
         }
     }
 
-
     public async Task<AuthResponse> RegisterVendorAsync(VendorRegisterRequest request)
     {
         var exists = await _db.Users.AnyAsync(u => u.Email == request.Email && !u.IsDeleted);
@@ -135,6 +134,7 @@ public class AuthService : IAuthService
 
         return BuildAuthResponse(user, token, refreshToken);
     }
+
     private string GenerateJwtToken(User user)
     {
         var key = new SymmetricSecurityKey(
@@ -171,6 +171,7 @@ public class AuthService : IAuthService
         return Convert.ToBase64String(randomBytes);
     }
 
+    // FIX: ExpiresAt sekarang baca dari config, bukan hardcode 60 menit
     private AuthResponse BuildAuthResponse(User user, string token, string refreshToken)
     {
         var expiryMinutes = int.Parse(_config["Jwt:ExpiryMinutes"] ?? "60");

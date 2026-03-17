@@ -53,7 +53,7 @@ public class VendorController : ControllerBase
         if (file is null || file.Length == 0)
             return BadRequest(new { error = "No file provided." });
 
-        var minSize = 1L * 1024; // 1KB for testing, restore to 5MB in production
+        var minSize = 5L * 1024 * 1024; // 5MB minimum
         var maxSize = 100L * 1024 * 1024;
 
         if (file.Length < minSize)

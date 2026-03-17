@@ -88,14 +88,20 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
+
+// FIX: CORS origins dibaca dari config (appsettings/env), bukan hardcode
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("DtcFrontend", policy =>
     {
+        // Baca dari config: Cors:AllowedOrigins (array)
+        // Contoh di appsettings.Development.json:
+        // "Cors": { "AllowedOrigins": ["http://localhost:3000", "https://YOUR-CODESPACE-URL-3000.app.github.dev"] }
         var allowedOrigins = builder.Configuration
             .GetSection("Cors:AllowedOrigins")
             .Get<string[]>()
-            ?? new[] { "http://localhost:3000" };
+            ?? ["http://localhost:3000"];
+
         policy
             .WithOrigins(allowedOrigins)
             .AllowAnyHeader()
@@ -148,7 +154,7 @@ using (var scope = app.Services.CreateScope())
     jobManager.AddOrUpdate<LibraryExpiryJob>(
         "library-expiry-check",
         j => j.CheckExpiringDocumentsAsync(),
-        "0 9 * * *"); // setiap hari jam 9 pagi
+        "0 9 * * *");
 }
 
 // Seed database
@@ -167,7 +173,6 @@ app.MapGet("/health", async (DtcDbContext db, IConfiguration config) =>
     var checks = new Dictionary<string, object>();
     var allHealthy = true;
 
-    // DB check
     try
     {
         await db.Database.CanConnectAsync();
@@ -179,7 +184,6 @@ app.MapGet("/health", async (DtcDbContext db, IConfiguration config) =>
         allHealthy = false;
     }
 
-    // OCR service check
     try
     {
         var ocrUrl = config["OcrService:BaseUrl"] ?? "http://localhost:8000";
@@ -190,7 +194,6 @@ app.MapGet("/health", async (DtcDbContext db, IConfiguration config) =>
     catch
     {
         checks["ocr"] = "unavailable";
-        // OCR unavailable tidak block health — degraded mode
     }
 
     return Results.Ok(new
@@ -238,11 +241,9 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Hangfire Dashboard (dev only)
 if (app.Environment.IsDevelopment())
     app.UseHangfireDashboard("/hangfire");
 
-// Recurring cleanup job — setiap hari jam 02:00
 RecurringJob.AddOrUpdate<SlaAlertJob>(
     "sla-alert-all-checks",
     job => job.RunAllChecksAsync(),

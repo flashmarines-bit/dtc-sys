@@ -31,6 +31,7 @@ public class ValidatorController : ControllerBase
     }
 
     [HttpPost("review/{id:guid}/approve")]
+    [Authorize(Roles = "Validator,Admin,SysAdmin")]
     public async Task<IActionResult> Approve(Guid id, [FromQuery] string? notes = null)
     {
         try { return Ok(await _validator.ApproveAsync(id, GetUserId(), notes)); }

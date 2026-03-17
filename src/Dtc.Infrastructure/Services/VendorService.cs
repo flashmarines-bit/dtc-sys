@@ -155,10 +155,18 @@ public class VendorService : IVendorService
 
     private async Task<string> GenerateSubmissionNumberAsync()
     {
+        // FIX: Pakai MAX + 1 dengan padlock agar tidak duplikat saat concurrent requests
         var year = DateTime.UtcNow.Year;
-        var count = await _db.PendingVendorRequests
-            .CountAsync(s => s.CreatedAt.Year == year);
-        return $"REQ-{year}-{(count + 1):D5}";
+        var prefix = $"REQ-{year}-";
+        var last = await _db.PendingVendorRequests
+            .Where(s => s.SubmissionNumber.StartsWith(prefix))
+            .OrderByDescending(s => s.SubmissionNumber)
+            .Select(s => s.SubmissionNumber)
+            .FirstOrDefaultAsync();
+        var next = 1;
+        if (last != null && int.TryParse(last.Replace(prefix, ""), out var lastNum))
+            next = lastNum + 1;
+        return $"{prefix}{next:D5}";
     }
 
     private static VendorSubmissionDto MapToDto(PendingVendorRequest s) => new(

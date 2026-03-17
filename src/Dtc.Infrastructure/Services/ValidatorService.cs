@@ -25,8 +25,11 @@ public class ValidatorService : IValidatorService
 
     public async Task<List<VendorSubmissionDto>> GetQueueAsync()
     {
+        // FIX: tambah Pending & Analysing agar validator bisa lihat seluruh antrian
         return await GetWithIncludes()
-            .Where(s => s.Status == VendorSubmissionStatus.UnderReview)
+            .Where(s => s.Status == VendorSubmissionStatus.UnderReview
+                     || s.Status == VendorSubmissionStatus.Pending
+                     || s.Status == VendorSubmissionStatus.Analysing)
             .OrderBy(s => s.CreatedAt)
             .Select(s => MapToDto(s))
             .ToListAsync();
@@ -159,10 +162,18 @@ public class ValidatorService : IValidatorService
     {
         if (config is null)
         {
+            // FIX: Pakai MAX nomor terakhir agar tidak duplikat saat concurrent
             var year = DateTime.UtcNow.Year;
-            var count = await _db.PendingVendorRequests
-                .CountAsync(s => s.Status == VendorSubmissionStatus.Accepted && s.CreatedAt.Year == year);
-            return $"DOC-{year}-{(count + 1):D5}";
+            var prefix = $"DOC-{year}-";
+            var last = await _db.Documents
+                .Where(d => d.DocumentNumber.StartsWith(prefix))
+                .OrderByDescending(d => d.DocumentNumber)
+                .Select(d => d.DocumentNumber)
+                .FirstOrDefaultAsync();
+            var next = 1;
+            if (last != null && int.TryParse(last.Replace(prefix, ""), out var lastNum))
+                next = lastNum + 1;
+            return $"{prefix}{next:D5}";
         }
 
         var docType = config.DocumentType;

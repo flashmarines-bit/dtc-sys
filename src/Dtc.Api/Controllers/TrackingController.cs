@@ -53,6 +53,7 @@ public class TrackingController : ControllerBase
 
     /// <summary>Receive document — Front Desk (Submitted → Received)</summary>
     [HttpPost("{documentId:guid}/receive")]
+    [Authorize(Roles = "FrontDesk,Admin,SysAdmin")]
     public async Task<IActionResult> Receive(Guid documentId, [FromBody] ReceiveDocumentRequest request)
     {
         try { return Ok(await _tracking.ReceiveAsync(documentId, GetUserId(), request)); }
@@ -62,6 +63,7 @@ public class TrackingController : ControllerBase
 
     /// <summary>Assign document to verifier (Received → Assigned)</summary>
     [HttpPost("{documentId:guid}/assign")]
+    [Authorize(Roles = "Admin,SysAdmin,Validator")]
     public async Task<IActionResult> Assign(Guid documentId, [FromBody] AssignDocumentRequest request)
     {
         try { return Ok(await _tracking.AssignAsync(documentId, GetUserId(), request)); }
@@ -80,6 +82,7 @@ public class TrackingController : ControllerBase
 
     /// <summary>Approve document (UnderReview → Approved)</summary>
     [HttpPost("{documentId:guid}/approve")]
+    [Authorize(Roles = "Validator,Admin,SysAdmin")]
     public async Task<IActionResult> Approve(Guid documentId, [FromBody] string? notes = null)
     {
         try { return Ok(await _tracking.ApproveAsync(documentId, GetUserId(), notes)); }

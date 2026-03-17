@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Dtc.Application.DTOs;
 using Dtc.Application.Interfaces;
-using Dtc.Application.DTOs;
 using Dtc.Domain.Common;
 
 [ApiController]
