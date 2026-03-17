@@ -186,8 +186,9 @@ public class AuthService : IAuthService
                 Id: user.Id,
                 FullName: user.FullName,
                 Email: user.Email,
-                Role: user.PrimaryRole, // primary role untuk display
-                IsActive: user.IsActive
+                Role: user.PrimaryRole,
+                IsActive: user.IsActive,
+                Roles: user.Roles  // kirim semua roles
             )
         );
     }

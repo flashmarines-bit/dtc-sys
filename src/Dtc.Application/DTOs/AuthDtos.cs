@@ -17,8 +17,9 @@ public record UserDto(
     Guid Id,
     string FullName,
     string Email,
-    string Role,
-    bool IsActive
+    string Role,         // primary role untuk display
+    bool IsActive,
+    List<string>? Roles = null  // semua roles
 );public record VendorProfileDto(
     Guid Id,
     string FullName,

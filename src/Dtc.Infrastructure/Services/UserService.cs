@@ -34,7 +34,7 @@ public class UserService : IUserService
             .OrderBy(u => u.FullName)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(u => new UserDto(u.Id, u.FullName, u.Email, u.PrimaryRole, u.IsActive))
+            .Select(u => new UserDto(u.Id, u.FullName, u.Email, u.PrimaryRole, u.IsActive, u.Roles))
             .ToListAsync();
 
         return new UserListResponse(totalCount, page, pageSize, users);
@@ -45,7 +45,7 @@ public class UserService : IUserService
         var user = await _db.Users.FindAsync(id);
         if (user is null || user.IsDeleted) return null;
 
-        return new UserDto(user.Id, user.FullName, user.Email, user.PrimaryRole, user.IsActive);
+        return new UserDto(user.Id, user.FullName, user.Email, user.PrimaryRole, user.IsActive, user.Roles);
     }
 
     public async Task<UserDto> CreateUserAsync(CreateUserRequest request)
@@ -74,7 +74,7 @@ public class UserService : IUserService
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
 
-        return new UserDto(user.Id, user.FullName, user.Email, user.PrimaryRole, user.IsActive);
+        return new UserDto(user.Id, user.FullName, user.Email, user.PrimaryRole, user.IsActive, user.Roles);
     }
 
     public async Task<UserDto?> UpdateUserAsync(Guid id, UpdateUserRequest request)
@@ -108,7 +108,7 @@ public class UserService : IUserService
         user.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
-        return new UserDto(user.Id, user.FullName, user.Email, user.PrimaryRole, user.IsActive);
+        return new UserDto(user.Id, user.FullName, user.Email, user.PrimaryRole, user.IsActive, user.Roles);
     }
 
     public async Task<bool> DeleteUserAsync(Guid id)
