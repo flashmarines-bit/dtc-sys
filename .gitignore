@@ -425,3 +425,9 @@ review*.md
 src/*/obj/
 src/*/bin/
 *.user
+
+# Frontend dependencies dan build
+frontend/node_modules/
+frontend/.next/
+frontend-vendor/node_modules/
+frontend-vendor/.next/
