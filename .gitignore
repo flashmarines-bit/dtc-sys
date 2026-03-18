@@ -420,3 +420,8 @@ FodyWeavers.xsd
 # Local secrets
 src/Dtc.Api/appsettings.Development.json
 review*.md
+
+# Build artifacts
+src/*/obj/
+src/*/bin/
+*.user
