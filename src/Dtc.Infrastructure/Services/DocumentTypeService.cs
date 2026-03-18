@@ -109,6 +109,10 @@ public class DocumentTypeService : IDocumentTypeService
 
         if (request.SequencePadding.HasValue)
             entity.SequencePadding = request.SequencePadding.Value;
+        if (request.IsActive.HasValue)
+            entity.IsActive = request.IsActive.Value;
+        if (request.ApplicableModules is not null)
+            entity.ApplicableModules = request.ApplicableModules;
 
         entity.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
