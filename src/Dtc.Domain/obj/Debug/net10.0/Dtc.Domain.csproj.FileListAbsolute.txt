@@ -1,0 +1,12 @@
+/workspaces/dtc-sys/src/Dtc.Domain/bin/Debug/net10.0/Dtc.Domain.deps.json
+/workspaces/dtc-sys/src/Dtc.Domain/bin/Debug/net10.0/Dtc.Domain.dll
+/workspaces/dtc-sys/src/Dtc.Domain/bin/Debug/net10.0/Dtc.Domain.pdb
+/workspaces/dtc-sys/src/Dtc.Domain/obj/Debug/net10.0/Dtc.Domain.GeneratedMSBuildEditorConfig.editorconfig
+/workspaces/dtc-sys/src/Dtc.Domain/obj/Debug/net10.0/Dtc.Domain.AssemblyInfoInputs.cache
+/workspaces/dtc-sys/src/Dtc.Domain/obj/Debug/net10.0/Dtc.Domain.AssemblyInfo.cs
+/workspaces/dtc-sys/src/Dtc.Domain/obj/Debug/net10.0/Dtc.Domain.csproj.CoreCompileInputs.cache
+/workspaces/dtc-sys/src/Dtc.Domain/obj/Debug/net10.0/Dtc.Domain.sourcelink.json
+/workspaces/dtc-sys/src/Dtc.Domain/obj/Debug/net10.0/Dtc.Domain.dll
+/workspaces/dtc-sys/src/Dtc.Domain/obj/Debug/net10.0/refint/Dtc.Domain.dll
+/workspaces/dtc-sys/src/Dtc.Domain/obj/Debug/net10.0/Dtc.Domain.pdb
+/workspaces/dtc-sys/src/Dtc.Domain/obj/Debug/net10.0/ref/Dtc.Domain.dll
