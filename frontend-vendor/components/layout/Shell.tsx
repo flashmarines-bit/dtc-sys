@@ -2,14 +2,14 @@
 
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
-import { FileText, Send, User, LogOut, Menu, X, Home, ChevronRight } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { FileText, Send, User, LogOut, Menu, X, Home, MapPin } from 'lucide-react'
 import { useState } from 'react'
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', href: '/submissions', icon: <Home className="w-5 h-5" /> },
-  { label: 'Pengajuan Baru', href: '/submissions/new', icon: <Send className="w-5 h-5" /> },
-  { label: 'Profil', href: '/profile', icon: <User className="w-5 h-5" /> },
+  { label: 'Submissions',  href: '/submissions', icon: <Home size={18} />,    modul: 'Modul 3' },
+  { label: 'Tracking',     href: '/tracking',    icon: <MapPin size={18} />,  modul: 'Modul 1' },
+  { label: 'Ajukan Fisik', href: '/tracking/new', icon: <Send size={18} />,    modul: 'Modul 1' },
+  { label: 'Profil',       href: '/profile',     icon: <User size={18} />,    modul: '' },
 ]
 
 export default function Shell({ children }: { children: React.ReactNode }) {
@@ -18,139 +18,149 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuthStore()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  const handleLogout = () => {
-    logout()
-    router.push('/login')
-  }
+  const handleLogout = () => { logout(); router.push('/login') }
+  const initials = user?.fullName?.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase() ?? '?'
 
-  const initials = user?.fullName?.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() ?? '?'
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
 
   return (
-    <div className="min-h-screen bg-[var(--background)]">
+    <div style={{ minHeight: '100vh', background: '#f0f4f8', fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
 
       {/* ── TOP NAVBAR ── */}
-      <header className="sticky top-0 z-50 bg-[var(--card)] border-b border-[var(--border)] shadow-sm">
-        <div className="max-w-6xl mx-auto flex items-center h-16 px-4 gap-4">
+      <header style={{ position: 'sticky', top: 0, zIndex: 50, background: '#ffffff', borderBottom: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', height: 60, padding: '0 20px', gap: 8 }}>
 
           {/* Logo */}
           <button onClick={() => router.push('/submissions')}
-            className="flex items-center gap-2.5 flex-shrink-0">
-            <div className="w-9 h-9 rounded-xl bg-[var(--primary)] flex items-center justify-center shadow-sm">
-              <FileText className="w-5 h-5 text-white" />
+            style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0, padding: 0 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: '#185FA5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <FileText size={18} color="white" />
             </div>
-            <div className="hidden sm:block">
-              <p className="font-bold text-sm text-[var(--foreground)] leading-tight">DTC Vendor</p>
-              <p className="text-xs text-[var(--muted-foreground)]">Portal Pengajuan</p>
+            <div style={{ display: 'none' }} className="sm-show">
+              <p style={{ fontWeight: 700, fontSize: 13, color: '#0f172a', lineHeight: 1, margin: 0 }}>DTC Vendor</p>
+              <p style={{ fontSize: 11, color: '#64748b', margin: 0 }}>Portal Pengajuan</p>
             </div>
           </button>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1 ml-6">
+          <nav style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 16 }}>
             {NAV_ITEMS.map(item => {
-              const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+              const active = isActive(item.href)
               return (
                 <button key={item.href} onClick={() => router.push(item.href)}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
-                    isActive
-                      ? "bg-[var(--primary)] text-white shadow-sm"
-                      : "text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]"
-                  )}>
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 7,
+                    padding: '6px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                    fontSize: 13, fontWeight: 500, fontFamily: 'inherit',
+                    background: active ? '#185FA5' : 'transparent',
+                    color: active ? 'white' : '#64748b',
+                    transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={e => { if (!active) e.currentTarget.style.background = '#f1f5f9' }}
+                  onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
+                >
                   {item.icon}
-                  {item.label}
+                  <span>{item.label}</span>
+                  {item.modul && (
+                    <span style={{
+                      fontSize: 10, fontWeight: 700,
+                      background: active ? 'rgba(255,255,255,0.2)' : '#e2e8f0',
+                      color: active ? 'white' : '#64748b',
+                      borderRadius: 4, padding: '1px 5px',
+                    }}>{item.modul}</span>
+                  )}
                 </button>
               )
             })}
           </nav>
 
-          <div className="flex-1" />
+          <div style={{ flex: 1 }} />
 
-          {/* User info + logout */}
-          <div className="hidden md:flex items-center gap-3">
-            <div className="text-right">
-              <p className="text-sm font-medium text-[var(--foreground)] leading-tight">{user?.fullName}</p>
-              <p className="text-xs text-[var(--muted-foreground)] truncate max-w-40">{user?.email}</p>
+          {/* User info + logout — desktop */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', margin: 0, lineHeight: 1.3 }}>{user?.fullName}</p>
+              <p style={{ fontSize: 11, color: '#64748b', margin: 0 }}>{user?.email}</p>
             </div>
-            <div className="w-9 h-9 rounded-full bg-[var(--primary)] flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+            <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#185FA5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
               {initials}
             </div>
             <button onClick={handleLogout}
-              className="p-2 rounded-lg text-[var(--muted-foreground)] hover:bg-red-50 hover:text-red-600 transition-colors"
+              style={{ padding: 8, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center' }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.color = '#dc2626' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#94a3b8' }}
               title="Keluar">
-              <LogOut className="w-4 h-4" />
+              <LogOut size={16} />
             </button>
           </div>
 
           {/* Mobile menu button */}
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg text-[var(--muted-foreground)] hover:bg-[var(--secondary)]">
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            style={{ display: 'none', padding: 8, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
+            className="mobile-menu-btn">
+            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
 
-        {/* Mobile dropdown menu */}
+        {/* Mobile dropdown */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-[var(--border)] bg-[var(--card)] px-4 py-3 space-y-1">
-            {/* User info mobile */}
-            <div className="flex items-center gap-3 px-3 py-2 mb-2">
-              <div className="w-10 h-10 rounded-full bg-[var(--primary)] flex items-center justify-center text-white font-bold">
-                {initials}
-              </div>
+          <div style={{ borderTop: '1px solid #e2e8f0', background: '#ffffff', padding: '12px 16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', marginBottom: 8 }}>
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#185FA5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700 }}>{initials}</div>
               <div>
-                <p className="font-medium text-sm text-[var(--foreground)]">{user?.fullName}</p>
-                <p className="text-xs text-[var(--muted-foreground)]">{user?.email}</p>
+                <p style={{ fontWeight: 600, fontSize: 13, color: '#0f172a', margin: 0 }}>{user?.fullName}</p>
+                <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>{user?.email}</p>
               </div>
             </div>
             {NAV_ITEMS.map(item => {
-              const isActive = pathname === item.href
+              const active = isActive(item.href)
               return (
                 <button key={item.href}
                   onClick={() => { router.push(item.href); setMobileMenuOpen(false) }}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
-                    isActive
-                      ? "bg-[var(--primary)] text-white"
-                      : "text-[var(--foreground)] hover:bg-[var(--secondary)]"
-                  )}>
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500, fontFamily: 'inherit', background: active ? '#185FA5' : 'transparent', color: active ? 'white' : '#0f172a', marginBottom: 2 }}>
                   {item.icon}
                   {item.label}
-                  <ChevronRight className="w-4 h-4 ml-auto opacity-50" />
+                  {item.modul && <span style={{ fontSize: 10, fontWeight: 700, background: active ? 'rgba(255,255,255,0.2)' : '#e2e8f0', color: active ? 'white' : '#64748b', borderRadius: 4, padding: '1px 5px', marginLeft: 'auto' }}>{item.modul}</span>}
                 </button>
               )
             })}
             <button onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-all">
-              <LogOut className="w-5 h-5" />
-              Keluar
+              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500, fontFamily: 'inherit', color: '#dc2626', background: 'transparent', marginTop: 4 }}>
+              <LogOut size={16} /> Keluar
             </button>
           </div>
         )}
       </header>
 
       {/* ── CONTENT ── */}
-      <main className="max-w-6xl mx-auto px-4 py-6 pb-24 md:pb-6">
+      <main style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 20px 80px' }}>
         {children}
       </main>
 
       {/* ── MOBILE BOTTOM NAV ── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--card)] border-t border-[var(--border)] safe-area-pb">
-        <div className="flex items-center justify-around px-2 py-2">
+      <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50, background: '#ffffff', borderTop: '1px solid #e2e8f0', paddingBottom: 'env(safe-area-inset-bottom, 8px)' }} className="mobile-nav">
+        <div style={{ display: 'flex', justifyContent: 'space-around', padding: '6px 8px' }}>
           {NAV_ITEMS.map(item => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+            const active = isActive(item.href)
             return (
               <button key={item.href} onClick={() => router.push(item.href)}
-                className={cn(
-                  "flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl transition-all min-w-16",
-                  isActive ? "text-[var(--primary)]" : "text-[var(--muted-foreground)]"
-                )}>
-                <span className={cn("transition-transform", isActive && "scale-110")}>{item.icon}</span>
-                <span className="text-xs font-medium">{item.label.split(' ')[0]}</span>
-                {isActive && <span className="w-1 h-1 rounded-full bg-[var(--primary)]" />}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '6px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'transparent', color: active ? '#185FA5' : '#94a3b8', fontFamily: 'inherit', minWidth: 64 }}>
+                {item.icon}
+                <span style={{ fontSize: 10, fontWeight: active ? 600 : 400 }}>{item.label}</span>
+                {active && <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#185FA5' }} />}
               </button>
             )
           })}
         </div>
       </nav>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (min-width: 640px) { .sm-show { display: block !important; } }
+        @media (min-width: 768px) { .mobile-nav { display: none !important; } .mobile-menu-btn { display: none !important; } }
+        @media (max-width: 767px) { nav > button { display: none !important; } }
+      `}</style>
     </div>
   )
 }

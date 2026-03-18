@@ -103,7 +103,8 @@ public class DocumentService : IDocumentService
             DocumentTypeId = request.DocumentTypeId,
             OrganizationFunctionId = request.OrganizationFunctionId,
             CreatedByUserId = userId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            DynamicData = request.DynamicData
         };
 
         _db.Documents.Add(doc);
@@ -253,7 +254,7 @@ public class DocumentService : IDocumentService
             StoragePath = storagePath,
             Notes = notes,
             CreatedByUserId = userId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
 
         _db.DocumentVersions.Add(version);

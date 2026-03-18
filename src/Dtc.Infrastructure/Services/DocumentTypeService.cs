@@ -36,6 +36,7 @@ public class DocumentTypeService : IDocumentTypeService
             .Select(dt => new DocumentTypeDto(
                 dt.Id, dt.Name, dt.Code, dt.Description,
                 dt.NumberingFormat, dt.SequencePadding,
+                dt.IsActive, dt.ApplicableModules,
                 dt.CreatedAt, dt.UpdatedAt))
             .ToListAsync();
 
@@ -50,6 +51,7 @@ public class DocumentTypeService : IDocumentTypeService
         return new DocumentTypeDto(
             dt.Id, dt.Name, dt.Code, dt.Description,
             dt.NumberingFormat, dt.SequencePadding,
+            dt.IsActive, dt.ApplicableModules,
             dt.CreatedAt, dt.UpdatedAt);
     }
 
@@ -78,6 +80,7 @@ public class DocumentTypeService : IDocumentTypeService
         return new DocumentTypeDto(
             entity.Id, entity.Name, entity.Code, entity.Description,
             entity.NumberingFormat, entity.SequencePadding,
+            entity.IsActive, entity.ApplicableModules,
             entity.CreatedAt, entity.UpdatedAt);
     }
 
@@ -113,6 +116,7 @@ public class DocumentTypeService : IDocumentTypeService
         return new DocumentTypeDto(
             entity.Id, entity.Name, entity.Code, entity.Description,
             entity.NumberingFormat, entity.SequencePadding,
+            entity.IsActive, entity.ApplicableModules,
             entity.CreatedAt, entity.UpdatedAt);
     }
 

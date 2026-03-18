@@ -37,7 +37,8 @@ public record CreateDocumentRequest(
     string? Description,
     Guid DocumentTypeId,
     Guid? OrganizationFunctionId,
-    string? Department
+    string? Department,
+    string? DynamicData  // JSON string dari dynamic form fields
 );
 
 public record UpdateDocumentRequest(

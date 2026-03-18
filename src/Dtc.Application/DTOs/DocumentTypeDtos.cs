@@ -7,6 +7,8 @@ public record DocumentTypeDto(
     string? Description,
     string NumberingFormat,
     int SequencePadding,
+    bool IsActive,
+    string? ApplicableModules,
     DateTime CreatedAt,
     DateTime? UpdatedAt
 );
@@ -31,5 +33,7 @@ public record UpdateDocumentTypeRequest(
     string? Code,
     string? Description,
     string? NumberingFormat,
-    int? SequencePadding
+    int? SequencePadding,
+    bool? IsActive,
+    string? ApplicableModules
 );
