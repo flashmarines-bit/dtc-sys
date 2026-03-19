@@ -20,7 +20,7 @@ function ResetPasswordForm() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!token) setError('Invalid or missing reset token. Please request a new link.');
+    if (!token) setError('Invalid or missing reset token. Please request a new reset link.');
   }, [token]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -77,6 +77,15 @@ function ResetPasswordForm() {
               <p style={{ fontSize:14, color:'#64748b', fontWeight:300 }}>Enter your new password below.</p>
             </div>
 
+            {error && !loading && (
+              <div style={{ display:'flex', alignItems:'flex-start', gap:8, background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:10, padding:'12px 14px', fontSize:13, color:'#991B1B', marginBottom:20, lineHeight:1.5 }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#991b1b" strokeWidth="2" style={{ flexShrink:0, marginTop:1 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <div>
+                  <span>{error}</span>
+                  {!token && <><br /><a href="/forgot-password" style={{ color:'#1d4ed8', fontWeight:500, textDecoration:'none' }}>Request a new reset link →</a></>}
+                </div>
+              </div>
+            )}
             <form onSubmit={handleSubmit}>
               <div className="f3" style={{ marginBottom:16 }}>
                 <label style={{ display:'block', fontFamily:"'Sora',sans-serif", fontSize:11, fontWeight:600, color:'#334155', letterSpacing:'1px', textTransform:'uppercase', marginBottom:8 }}>New Password</label>
@@ -97,12 +106,6 @@ function ResetPasswordForm() {
                   </button>
                 </div>
               </div>
-
-              {error && (
-                <div style={{ display:'flex', alignItems:'flex-start', gap:8, background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:8, padding:'10px 12px', fontSize:13, color:'#991B1B', marginBottom:16, lineHeight:1.5 }}>
-                  <span>{error}</span>
-                </div>
-              )}
 
               <div className="f5">
                 <button type="submit" className="rp-btn" disabled={loading || !token}>
