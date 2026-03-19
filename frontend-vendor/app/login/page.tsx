@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
+import { Loader2, FileText, ExternalLink, Shield } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,447 +24,206 @@ export default function LoginPage() {
     try {
       const res = await api.post('/api/auth/login', { email, password });
       const { token, user } = res.data;
-
-      // Simpan vendor_token ke cookie (7 hari)
       document.cookie = `vendor_token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
-
-      // Cek role vendor
       const roles: string[] = user.roles ?? [];
       if (!roles.includes('Vendor')) {
-        setError('Akun ini bukan akun vendor. Gunakan portal internal DTC.');
+        setError('This account is not a vendor account. Please use the internal DTC portal.');
         document.cookie = 'vendor_token=; path=/; max-age=0';
         setLoading(false);
         return;
       }
-
       setAuth(user, token, res.data.refreshToken);
       router.push('/submissions');
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setError(msg ?? 'Email atau password salah. Silakan coba lagi.');
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setError(msg ?? 'Invalid email or password. Please try again.');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main style={styles.main}>
-      <div style={styles.card}>
-        {/* ── PANEL KIRI ── */}
-        <div style={styles.left}>
-          {/* Geometric background SVG */}
-          <svg style={styles.geo} viewBox="0 0 280 600" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-            <circle cx="240" cy="70"  r="140" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1"/>
-            <circle cx="240" cy="70"  r="90"  fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="1"/>
-            <circle cx="240" cy="70"  r="45"  fill="none" stroke="rgba(255,255,255,0.09)" strokeWidth="1"/>
-            <circle cx="-20" cy="500" r="180" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1"/>
-            <circle cx="-20" cy="500" r="110" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1"/>
-            <rect x="30"  y="240" width="64" height="64" rx="4" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="1" transform="rotate(15 62 272)"/>
-            <rect x="160" y="370" width="42" height="42" rx="4" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" transform="rotate(-12 181 391)"/>
-            <polygon points="90,170 112,208 68,208" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="1"/>
-            <polygon points="190,440 210,475 170,475" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1"/>
-            <line x1="0" y1="300" x2="280" y2="300" stroke="rgba(255,255,255,0.04)" strokeWidth="1"/>
-          </svg>
+    <div style={{ minHeight:'100vh', background:'#eaecf2', backgroundImage:"url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%230d1b2a' fill-opacity='0.04'%3E%3Ccircle cx='20' cy='20' r='1'/%3E%3C/g%3E%3C/svg%3E\")", display:'flex', alignItems:'center', justifyContent:'center', padding:'24px 16px', fontFamily:"'DM Sans', sans-serif" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
+        .vnav-card { display:flex; width:100%; max-width:880px; min-height:600px; border-radius:22px; overflow:hidden; box-shadow:0 28px 72px rgba(13,27,42,0.18),0 4px 20px rgba(13,27,42,0.08); animation:cardIn 0.6s cubic-bezier(0.22,1,0.36,1) both; }
+        .vnav-left { width:44%; background:#0d1b2a; position:relative; display:flex; flex-direction:column; justify-content:space-between; padding:44px 40px; overflow:hidden; align-self:stretch; }
+        .vnav-left::before { content:''; position:absolute; inset:0; background-image:linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px); background-size:44px 44px; }
+        .vnav-left::after { content:''; position:absolute; width:420px; height:420px; border-radius:50%; background:radial-gradient(circle,rgba(29,78,216,0.2) 0%,transparent 70%); bottom:-130px; right:-100px; }
+        .vnav-right { flex:1; background:white; display:flex; flex-direction:column; justify-content:center; padding:44px 52px; }
+        .deco-ring { position:absolute; border-radius:50%; border:1px solid rgba(255,255,255,0.06); pointer-events:none; }
+        .z2 { position:relative; z-index:2; }
+        .vnav-input { width:100%; height:50px; padding:0 16px; border:1.5px solid #cbd5e1; border-radius:10px; font-size:14px; font-family:'DM Sans',sans-serif; color:#0d1b2a; background:#f5f7fa; outline:none; transition:border-color 0.2s,box-shadow 0.2s,background 0.2s; }
+        .vnav-input:focus { border-color:#1d4ed8; background:white; box-shadow:0 0 0 3px rgba(29,78,216,0.1); }
+        .vnav-btn { width:100%; height:52px; background:#0d1b2a; color:#e8edf5; border:none; border-radius:10px; font-family:'Sora',sans-serif; font-size:13px; font-weight:600; letter-spacing:1px; cursor:pointer; position:relative; overflow:hidden; transition:background 0.2s,transform 0.15s; }
+        .vnav-btn:hover:not(:disabled) { background:#152539; }
+        .vnav-btn:active:not(:disabled) { transform:scale(0.99); }
+        .vnav-btn:disabled { opacity:0.7; cursor:not-allowed; }
+        .btn-shimmer { position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.05),transparent); transform:translateX(-100%); animation:shimmer 2.5s infinite; }
+        .stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:0; }
+        .stat-item { padding-right:16px; }
+        .stat-item+.stat-item { padding-left:16px; border-left:1px solid rgba(255,255,255,0.08); }
+        .stat-num { font-family:'Sora',sans-serif; font-size:22px; font-weight:700; color:#e8edf5; letter-spacing:-0.8px; }
+        .stat-lbl { font-size:9px; color:rgba(232,237,245,0.3); letter-spacing:1.2px; text-transform:uppercase; margin-top:3px; }
+        .dev-link { font-family:'Sora',sans-serif; font-size:12px; font-weight:600; color:rgba(232,237,245,0.6); text-decoration:none; display:inline-flex; align-items:center; gap:5px; transition:color 0.2s; }
+        .dev-link:hover { color:#93c5fd; }
+        .pw-toggle { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:#9ca3af; padding:0; display:flex; align-items:center; }
+        @keyframes cardIn { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes shimmer { 0%{transform:translateX(-100%)} 50%,100%{transform:translateX(100%)} }
+        @keyframes fu { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+        .f1{animation:fu 0.5s 0.15s both} .f2{animation:fu 0.5s 0.25s both} .f3{animation:fu 0.5s 0.32s both}
+        .f4{animation:fu 0.5s 0.39s both} .f5{animation:fu 0.5s 0.46s both} .f6{animation:fu 0.5s 0.53s both}
+        .f7{animation:fu 0.5s 0.6s both} .f8{animation:fu 0.5s 0.67s both}
+      `}</style>
 
-          {/* Content */}
-          <div style={styles.leftTop}>
-            <div style={styles.versionBadge}>
-              <span style={styles.badgeDot}/>
-              DTC System v1.0
+      <div className="vnav-card">
+
+        {/* LEFT PANEL */}
+        <div className="vnav-left">
+          <div className="deco-ring" style={{ width:280, height:280, top:-70, left:-70 }} />
+          <div className="deco-ring" style={{ width:160, height:160, top:45, left:45, borderColor:'rgba(255,255,255,0.04)' }} />
+          <div className="deco-ring" style={{ width:200, height:200, bottom:55, right:-55 }} />
+
+          {/* Top */}
+          <div className="z2">
+            {/* Brand */}
+            <div className="f1" style={{ display:'flex', alignItems:'center', gap:14, marginBottom:44 }}>
+              <div style={{ width:48, height:48, background:'#1d4ed8', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <FileText size={24} color="#bfdbfe" />
+              </div>
+              <div>
+                <div style={{ fontFamily:"'Sora',sans-serif", fontSize:19, fontWeight:700, color:'#e8edf5', letterSpacing:-0.4 }}>DTC System</div>
+                <div style={{ fontSize:9, color:'rgba(232,237,245,0.35)', letterSpacing:'2px', textTransform:'uppercase', marginTop:3, whiteSpace:'nowrap' }}>Document Track Action Control</div>
+              </div>
             </div>
-            <div style={styles.brandIcon}>
-              {/* Document icon */}
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
-              </svg>
+
+            {/* Vendor Badge */}
+            <div className="f2" style={{ display:'inline-flex', alignItems:'center', gap:7, background:'rgba(29,78,216,0.2)', border:'1px solid rgba(29,78,216,0.35)', padding:'5px 14px', borderRadius:20, marginBottom:28 }}>
+              <div style={{ width:6, height:6, borderRadius:'50%', background:'#60a5fa' }} />
+              <span style={{ fontFamily:"'Sora',sans-serif", fontSize:10, fontWeight:500, color:'#93c5fd', letterSpacing:'1px', textTransform:'uppercase' }}>Vendor Portal</span>
             </div>
-            <h1 style={styles.brandTitle}>Vendor{'\n'}Portal</h1>
-            <p style={styles.brandSub}>
-              Platform pengajuan dokumen terpusat untuk mitra bisnis DTC.
-            </p>
+
+            {/* Features */}
+            <div className="f3" style={{ display:'flex', flexDirection:'column', gap:18 }}>
+              {[
+                'Real-time form management and vendor submission tracking',
+                'Structured approval workflow with complete audit trail',
+                'Role-based access control with multi-layer security',
+              ].map((txt, i) => (
+                <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:12 }}>
+                  <div style={{ width:6, height:6, borderRadius:'50%', background:'#1d4ed8', flexShrink:0, marginTop:7 }} />
+                  <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13, color:'rgba(232,237,245,0.48)', fontWeight:300, lineHeight:1.65 }}>{txt}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div style={styles.leftBottom}>
-            {[
-              { label: 'Submission', desc: '— pengajuan & tracking' },
-              { label: 'AI Review',  desc: '— analisis otomatis' },
-              { label: 'Notifikasi', desc: '— status real-time' },
-            ].map((item) => (
-              <div key={item.label} style={styles.statRow}>
-                <span style={styles.statDot}/>
-                <span style={styles.statText}>
-                  <strong style={{ color: 'white', fontWeight: 500 }}>{item.label}</strong>
-                  {' '}{item.desc}
-                </span>
+          {/* Bottom */}
+          <div className="z2">
+            <div className="f4 stats-grid" style={{ marginBottom:22 }}>
+              {[['3+','Active Modules'],['100%','Audit Trail'],['24/7','Uptime']].map(([n,l],i) => (
+                <div key={i} className="stat-item">
+                  <div className="stat-num">{n}</div>
+                  <div className="stat-lbl">{l}</div>
+                </div>
+              ))}
+            </div>
+            <div className="f5" style={{ borderTop:'1px solid rgba(255,255,255,0.07)', paddingTop:18, display:'flex', justifyContent:'space-between', alignItems:'flex-end' }}>
+              <div>
+                <div style={{ fontSize:9, color:'rgba(232,237,245,0.22)', letterSpacing:'1.5px', textTransform:'uppercase', marginBottom:5 }}>Developed & Published by</div>
+                <a href="https://www.maccom.id" target="_blank" rel="noreferrer" className="dev-link">
+                  MACCOM.ID <ExternalLink size={10} style={{ opacity:0.4 }} />
+                </a>
               </div>
-            ))}
+              <div style={{ fontFamily:"'Sora',sans-serif", fontSize:10, fontWeight:500, color:'rgba(232,237,245,0.28)', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', padding:'4px 10px', borderRadius:20 }}>v1.00</div>
+            </div>
           </div>
         </div>
 
-        {/* ── PANEL KANAN ── */}
-        <div style={styles.right}>
-          <div style={styles.formHeader}>
-            <h2 style={styles.formTitle}>Masuk ke akun Anda</h2>
-            <p style={styles.formDesc}>Masukkan kredensial vendor untuk melanjutkan</p>
+        {/* RIGHT PANEL */}
+        <div className="vnav-right">
+          <div className="f1" style={{ marginBottom:24 }}>
+            <h2 style={{ fontFamily:"'Sora',sans-serif", fontSize:26, fontWeight:700, color:'#0d1b2a', letterSpacing:-0.7, marginBottom:8 }}>Sign In</h2>
+            <p style={{ fontSize:14, color:'#64748b', fontWeight:300 }}>Enter your credentials to access the vendor portal</p>
           </div>
 
-          <form onSubmit={handleLogin} style={styles.form}>
+          <form onSubmit={handleLogin}>
             {/* Email */}
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>Email</label>
-              <input
-                type="email"
-                placeholder="email@perusahaan.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                style={styles.input}
-                onFocus={(e) => { e.target.style.borderColor = '#185FA5'; e.target.style.backgroundColor = '#fff'; }}
-                onBlur={(e)  => { e.target.style.borderColor = '#d1d5db'; e.target.style.backgroundColor = '#f9fafb'; }}
-              />
+            <div className="f2" style={{ marginBottom:14 }}>
+              <label style={{ display:'block', fontFamily:"'Sora',sans-serif", fontSize:11, fontWeight:600, color:'#334155', letterSpacing:'1px', textTransform:'uppercase', marginBottom:8 }}>Email</label>
+              <input type="email" className="vnav-input" placeholder="you@company.com" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
             </div>
 
             {/* Password */}
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>Password</label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type={showPw ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  autoComplete="current-password"
-                  style={{ ...styles.input, paddingRight: '42px' }}
-                  onFocus={(e) => { e.target.style.borderColor = '#185FA5'; e.target.style.backgroundColor = '#fff'; }}
-                  onBlur={(e)  => { e.target.style.borderColor = '#d1d5db'; e.target.style.backgroundColor = '#f9fafb'; }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPw((v) => !v)}
-                  style={styles.pwToggle}
-                  aria-label={showPw ? 'Sembunyikan password' : 'Tampilkan password'}
-                >
+            <div className="f3" style={{ marginBottom:4 }}>
+              <label style={{ display:'block', fontFamily:"'Sora',sans-serif", fontSize:11, fontWeight:600, color:'#334155', letterSpacing:'1px', textTransform:'uppercase', marginBottom:8 }}>Password</label>
+              <div style={{ position:'relative' }}>
+                <input type={showPw ? 'text' : 'password'} className="vnav-input" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required autoComplete="current-password" style={{ paddingRight:42 }} />
+                <button type="button" className="pw-toggle" onClick={() => setShowPw(v => !v)} aria-label={showPw ? 'Hide password' : 'Show password'}>
                   {showPw ? (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-                      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-                      <line x1="1" y1="1" x2="23" y2="23"/>
-                    </svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                   ) : (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                      <circle cx="12" cy="12" r="3"/>
-                    </svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                   )}
                 </button>
               </div>
             </div>
 
-            {/* Error message */}
+            {/* Forgot */}
+            <div className="f4" style={{ display:'flex', justifyContent:'flex-end', marginBottom:18 }}>
+              <a href="/forgot-password" style={{ fontSize:12, color:'#1d4ed8', textDecoration:'none' }}>Forgot password?</a>
+            </div>
+
+            {/* Error */}
             {error && (
-              <div style={styles.errorBox}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#991b1b" strokeWidth="2" style={{ flexShrink: 0, marginTop: 1 }}>
-                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
+              <div style={{ display:'flex', alignItems:'flex-start', gap:8, background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:8, padding:'10px 12px', fontSize:13, color:'#991B1B', marginBottom:16, lineHeight:1.5 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#991b1b" strokeWidth="2" style={{ flexShrink:0, marginTop:1 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 <span>{error}</span>
               </div>
             )}
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                ...styles.btnLogin,
-                opacity: loading ? 0.75 : 1,
-                cursor: loading ? 'not-allowed' : 'pointer',
-              }}
-            >
-              {loading ? (
-                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" style={{ animation: 'spin 0.8s linear infinite' }}>
-                    <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-                  </svg>
-                  Memverifikasi...
-                </span>
-              ) : 'Masuk'}
-            </button>
-
-            {/* Divider */}
-            <div style={styles.divider}>
-              <span style={styles.dividerLine}/>
-              <span style={styles.dividerText}>atau</span>
-              <span style={styles.dividerLine}/>
-            </div>
-
-            {/* Register */}
-            <Link href="/register" style={{ textDecoration: 'none' }}>
-              <button type="button" style={styles.btnRegister}>
-                Daftar sebagai vendor baru
+            {/* Button */}
+            <div className="f5">
+              <button type="submit" className="vnav-btn" disabled={loading}>
+                <div className="btn-shimmer" />
+                {loading
+                  ? <span style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}><Loader2 size={16} className="animate-spin" /> Verifying...</span>
+                  : 'SIGN IN'
+                }
               </button>
-            </Link>
+            </div>
           </form>
 
-          <p style={styles.footerNote}>
-            DTC System · Vendor Portal · Hanya untuk mitra terdaftar
-          </p>
-        </div>
-      </div>
+          {/* Divider */}
+          <div className="f6" style={{ display:'flex', alignItems:'center', gap:12, margin:'14px 0' }}>
+            <div style={{ flex:1, height:1, background:'#cbd5e1' }} />
+            <span style={{ fontSize:12, color:'#94a3b8' }}>or</span>
+            <div style={{ flex:1, height:1, background:'#cbd5e1' }} />
+          </div>
 
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600&family=Playfair+Display:wght@600&display=swap');
-        * { box-sizing: border-box; }
-        body { margin: 0; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-      `}</style>
-    </main>
+          {/* Register */}
+          <div className="f6" style={{ marginBottom:16 }}>
+            <Link href="/register" style={{ textDecoration:'none' }}>
+              <button type="button" style={{ width:'100%', height:48, background:'transparent', border:'1.5px solid #cbd5e1', borderRadius:10, fontFamily:"'Sora',sans-serif", fontSize:13, fontWeight:500, color:'#334155', cursor:'pointer', transition:'border-color 0.2s' }}>
+                Register as a new vendor
+              </button>
+            </Link>
+          </div>
+
+          {/* Security */}
+          <div className="f7" style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 16px', background:'#f0f4fa', border:'1px solid #cbd5e1', borderRadius:10, marginBottom:14 }}>
+            <Shield size={15} color="#1d4ed8" style={{ flexShrink:0 }} />
+            <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:12, color:'#64748b', lineHeight:1.5 }}>Secured with SSL encryption. Your data is fully protected.</span>
+          </div>
+
+          {/* Copyright */}
+          <div className="f8" style={{ textAlign:'center', fontSize:11, color:'#94a3b8', lineHeight:1.7 }}>
+            © 2026 DTC System. All rights reserved. &nbsp;·&nbsp;
+            Developed & Published by <a href="https://www.maccom.id" target="_blank" rel="noreferrer" style={{ color:'#1d4ed8', textDecoration:'none', fontWeight:500 }}>MACCOM.ID</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
   );
 }
-
-/* ─── Styles ─────────────────────────────────────────────────────────── */
-const styles: Record<string, React.CSSProperties> = {
-  main: {
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: '#EFF2F7',
-    padding: '1.5rem',
-    fontFamily: "'DM Sans', sans-serif",
-  },
-  card: {
-    display: 'flex',
-    width: '100%',
-    maxWidth: '860px',
-    minHeight: '560px',
-    borderRadius: '16px',
-    overflow: 'hidden',
-    boxShadow: '0 4px 32px rgba(0,0,0,0.10)',
-  },
-
-  /* ── LEFT PANEL ── */
-  left: {
-    flex: '0 0 42%',
-    background: '#0C447C',
-    position: 'relative',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    padding: '2.75rem 2.25rem',
-    overflow: 'hidden',
-  },
-  geo: {
-    position: 'absolute',
-    inset: 0,
-    width: '100%',
-    height: '100%',
-    pointerEvents: 'none',
-  },
-  leftTop: {
-    position: 'relative',
-    zIndex: 1,
-  },
-  versionBadge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '6px',
-    background: 'rgba(255,255,255,0.10)',
-    border: '1px solid rgba(255,255,255,0.15)',
-    borderRadius: '20px',
-    padding: '4px 12px',
-    fontSize: '11px',
-    color: 'rgba(255,255,255,0.80)',
-    marginBottom: '1.5rem',
-    fontFamily: "'DM Sans', sans-serif",
-  },
-  badgeDot: {
-    width: '5px',
-    height: '5px',
-    borderRadius: '50%',
-    background: '#5DCAA5',
-    display: 'inline-block',
-  },
-  brandIcon: {
-    width: '52px',
-    height: '52px',
-    background: 'rgba(255,255,255,0.12)',
-    border: '1px solid rgba(255,255,255,0.18)',
-    borderRadius: '13px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: '1.5rem',
-  },
-  brandTitle: {
-    fontFamily: "'Playfair Display', serif",
-    fontSize: '30px',
-    fontWeight: 600,
-    color: 'white',
-    lineHeight: 1.2,
-    whiteSpace: 'pre-line',
-    marginBottom: '0.85rem',
-  },
-  brandSub: {
-    fontSize: '13px',
-    color: 'rgba(255,255,255,0.62)',
-    lineHeight: 1.65,
-    maxWidth: '220px',
-  },
-  leftBottom: {
-    position: 'relative',
-    zIndex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-  },
-  statRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-  },
-  statDot: {
-    width: '6px',
-    height: '6px',
-    borderRadius: '50%',
-    background: '#5DCAA5',
-    flexShrink: 0,
-  },
-  statText: {
-    fontSize: '12.5px',
-    color: 'rgba(255,255,255,0.68)',
-  },
-
-  /* ── RIGHT PANEL ── */
-  right: {
-    flex: 1,
-    background: '#ffffff',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    padding: '2.75rem 2.75rem',
-  },
-  formHeader: {
-    marginBottom: '1.75rem',
-  },
-  formTitle: {
-    fontSize: '20px',
-    fontWeight: 600,
-    color: '#111827',
-    marginBottom: '6px',
-    fontFamily: "'DM Sans', sans-serif",
-  },
-  formDesc: {
-    fontSize: '13.5px',
-    color: '#6b7280',
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0',
-  },
-  fieldGroup: {
-    marginBottom: '1.1rem',
-  },
-  label: {
-    display: 'block',
-    fontSize: '11.5px',
-    fontWeight: 600,
-    color: '#374151',
-    textTransform: 'uppercase',
-    letterSpacing: '0.06em',
-    marginBottom: '6px',
-  },
-  input: {
-    width: '100%',
-    height: '42px',
-    padding: '0 12px',
-    border: '1px solid #d1d5db',
-    borderRadius: '8px',
-    fontSize: '14px',
-    fontFamily: "'DM Sans', sans-serif",
-    color: '#111827',
-    background: '#f9fafb',
-    outline: 'none',
-    transition: 'border-color 0.15s, background-color 0.15s',
-  },
-  pwToggle: {
-    position: 'absolute',
-    right: '12px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    color: '#9ca3af',
-    padding: '0',
-    display: 'flex',
-    alignItems: 'center',
-  },
-  errorBox: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '8px',
-    background: '#FEF2F2',
-    border: '1px solid #FECACA',
-    borderRadius: '8px',
-    padding: '10px 12px',
-    fontSize: '13px',
-    color: '#991B1B',
-    marginBottom: '1rem',
-    lineHeight: 1.5,
-  },
-  btnLogin: {
-    width: '100%',
-    height: '43px',
-    background: '#185FA5',
-    border: 'none',
-    borderRadius: '8px',
-    color: 'white',
-    fontSize: '14px',
-    fontWeight: 500,
-    fontFamily: "'DM Sans', sans-serif",
-    letterSpacing: '0.02em',
-    transition: 'background 0.15s',
-    marginTop: '0.25rem',
-    marginBottom: '0',
-  },
-  divider: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    margin: '1.1rem 0',
-  },
-  dividerLine: {
-    flex: 1,
-    height: '1px',
-    background: '#e5e7eb',
-    display: 'block',
-  },
-  dividerText: {
-    fontSize: '12px',
-    color: '#9ca3af',
-    whiteSpace: 'nowrap',
-  },
-  btnRegister: {
-    width: '100%',
-    height: '42px',
-    background: 'transparent',
-    border: '1px solid #d1d5db',
-    borderRadius: '8px',
-    color: '#374151',
-    fontSize: '14px',
-    fontWeight: 500,
-    fontFamily: "'DM Sans', sans-serif",
-    cursor: 'pointer',
-    transition: 'border-color 0.15s, color 0.15s',
-  },
-  footerNote: {
-    marginTop: '1.5rem',
-    fontSize: '11px',
-    color: '#9ca3af',
-    textAlign: 'center',
-  },
-};

@@ -47,6 +47,19 @@ public class SystemSettingsController : ControllerBase
         return Ok(new { message = "Setting updated." });
     }
 
+
+    // Public endpoint — dipakai login page (no auth required)
+    [HttpGet("public/it-support")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetItSupport()
+    {
+        var url   = await _settings.GetValueAsync("it_support_url");
+        var label = await _settings.GetValueAsync("it_support_label");
+        return Ok(new {
+            url   = url   ?? "",
+            label = label ?? "IT Support"
+        });
+    }
     [HttpDelete("{key}")]
     public async Task<IActionResult> Delete(string key)
     {

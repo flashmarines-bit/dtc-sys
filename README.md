@@ -1,20 +1,17 @@
 # dtc-sys
 document-trackaction-control
 
+ketik ini diterminal untuk running aplikasi
+bash dev.sh all
 
-pkill -f "dotnet.*Dtc.Api" 2>/dev/null
-pkill -f "next" 2>/dev/null
-sleep 2
 
-export Supabase__ServiceKey="sb_secret_goHG94ZR3Ah4zGSc0l716A_3hsGT20l" && \
-cd /workspaces/dtc-sys && dotnet run --project src/Dtc.Api --urls "http://localhost:5000" > /tmp/api.log 2>&1 &
 
-cd /workspaces/dtc-sys/frontend && npm run dev > /tmp/next.log 2>&1 &
+Semua port sudah public! Langsung buka di browser:
+🖥️ Internal → https://cuddly-enigma-69667jq5vvgq24gp9-3000.app.github.dev
+🏪 Vendor → https://cuddly-enigma-69667jq5vvgq24gp9-4000.app.github.dev
+🔌 API → https://cuddly-enigma-69667jq5vvgq24gp9-5000.app.github.dev
 
-until curl -s http://localhost:5000/health > /dev/null 2>&1; do sleep 2; done && \
-gh codespace ports visibility 5000:public -c $CODESPACE_NAME && \
-echo "✅ API READY & PUBLIC"
+Login dengan:
 
-until curl -s http://localhost:3000 > /dev/null 2>&1; do sleep 2; done && \
-gh codespace ports visibility 3000:public -c $CODESPACE_NAME && \
-echo "✅ FRONTEND READY & PUBLIC"
+Internal/Admin → sysadmin@dtc.local / SysAdmin@123
+Vendor → vendor@majujaya.com / Vendor@123
