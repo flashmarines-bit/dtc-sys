@@ -1,10 +1,11 @@
 # dtc-sys
 document-trackaction-control
 
-ketik ini diterminal untuk running aplikasi
+ketik ini di terminal untuk running aplikasi
 bash dev.sh all
 
-
+Ketik ini di terminal untuk simpan perubahan
+bash save.sh "feat: ganti dengan nama statusnya"
 
 Semua port sudah public! Langsung buka di browser:
 🖥️ Internal → https://cuddly-enigma-69667jq5vvgq24gp9-3000.app.github.dev
