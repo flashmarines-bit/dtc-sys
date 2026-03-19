@@ -16,11 +16,13 @@ public class AuthService : IAuthService
 {
     private readonly DtcDbContext _db;
     private readonly IConfiguration _config;
+    private readonly IEmailService _emailService;
 
-    public AuthService(DtcDbContext db, IConfiguration config)
+    public AuthService(DtcDbContext db, IConfiguration config, IEmailService emailService)
     {
         _db = db;
         _config = config;
+        _emailService = emailService;
     }
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request)
@@ -192,4 +194,47 @@ public class AuthService : IAuthService
             )
         );
     }
+    public async Task ForgotPasswordAsync(string email)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email && u.IsActive);
+        if (user is null) return; // Silent — jangan bocorkan email mana yang terdaftar
+
+        // Generate secure token
+        var token = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
+        user.PasswordResetToken = token;
+        user.PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(1);
+        await _db.SaveChangesAsync();
+
+        // Kirim email
+        var resetUrl = $"{_config["App:VendorPortalUrl"]}/reset-password?token={token}";
+        await _emailService.SendAsync(
+            to: user.Email,
+            subject: "DTC System — Password Reset Request",
+            htmlBody: $"""
+                <p>Hi {user.FullName},</p>
+                <p>We received a request to reset your DTC System password.</p>
+                <p><a href="{resetUrl}" style="background:#1d4ed8;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;display:inline-block;font-weight:600;">Reset Password</a></p>
+                <p>This link will expire in <strong>1 hour</strong>.</p>
+                <p>If you didn't request this, you can safely ignore this email.</p>
+                <br><p style="color:#888;font-size:12px;">DTC System &mdash; Developed by MACCOM.ID</p>
+            """
+        );
+    }
+
+    public async Task ResetPasswordAsync(string token, string newPassword)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u =>
+            u.PasswordResetToken == token &&
+            u.PasswordResetTokenExpiry > DateTime.UtcNow);
+
+        if (user is null)
+            throw new InvalidOperationException("Reset token is invalid or has expired.");
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+        user.PasswordResetToken = null;
+        user.PasswordResetTokenExpiry = null;
+        user.RefreshToken = null; // Invalidate semua session lama
+        await _db.SaveChangesAsync();
+    }
+
 }

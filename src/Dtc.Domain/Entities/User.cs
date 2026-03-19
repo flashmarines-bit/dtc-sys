@@ -29,6 +29,10 @@ public class User : BaseEntity
     public string? CompanyName { get; set; }
     public string? ContactPhone { get; set; }
 
+    // Password Reset
+    public string? PasswordResetToken { get; set; }
+    public DateTime? PasswordResetTokenExpiry { get; set; }
+
     // Navigation
     public ICollection<Document> Documents { get; set; } = [];
     public ICollection<WorkflowAction> WorkflowActions { get; set; } = [];

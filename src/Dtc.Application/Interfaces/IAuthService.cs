@@ -9,4 +9,6 @@ public interface IAuthService
     Task<AuthResponse?> RefreshTokenAsync(string refreshToken);
     Task RevokeTokenAsync(string refreshToken);
     Task<AuthResponse> RegisterVendorAsync(VendorRegisterRequest request);
+    Task ForgotPasswordAsync(string email);
+    Task ResetPasswordAsync(string token, string newPassword);
 }

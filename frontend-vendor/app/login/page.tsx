@@ -205,7 +205,7 @@ export default function LoginPage() {
           <div className="f6" style={{ marginBottom:16 }}>
             <Link href="/register" style={{ textDecoration:'none' }}>
               <button type="button" style={{ width:'100%', height:48, background:'transparent', border:'1.5px solid #cbd5e1', borderRadius:10, fontFamily:"'Sora',sans-serif", fontSize:13, fontWeight:500, color:'#334155', cursor:'pointer', transition:'border-color 0.2s' }}>
-                Register as a new vendor
+                Create a Vendor Account
               </button>
             </Link>
           </div>

@@ -37,3 +37,6 @@ public record VendorRegisterRequest(
     string CompanyName,
     string? PhoneNumber
 );
+
+public record ForgotPasswordRequest(string Email);
+public record ResetPasswordRequest(string Token, string NewPassword);
