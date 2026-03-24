@@ -6,477 +6,300 @@ import Shell from '@/components/layout/Shell'
 import { api } from '@/lib/api'
 import { useAuthStore } from '@/store/auth'
 import { DocumentType, MetaSchemaField } from '@/types'
-import { Upload, FileText, X, Loader2, ChevronLeft, AlertCircle, ChevronDown } from 'lucide-react'
+import { Upload, FileText, X, Loader2, ChevronLeft, AlertCircle, ChevronDown, CheckCircle, User, Building2, Hash, ArrowRight, ArrowLeft } from 'lucide-react'
 import { cn, formatFileSize } from '@/lib/utils'
 
-// ─── Dynamic Field Renderer ───────────────────────────────────────────────────
-function DynamicField({
-  field,
-  value,
-  onChange,
-}: {
-  field: MetaSchemaField
-  value: string
-  onChange: (val: string) => void
-}) {
-  const base =
-    'w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--muted)] text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all'
+const STEPS = [
+  { id: 1, label: 'Dokumen', icon: Upload },
+  { id: 2, label: 'Informasi', icon: FileText },
+  { id: 3, label: 'Kontak', icon: User },
+]
 
+function DynamicField({ field, value, onChange }: { field: MetaSchemaField; value: string; onChange: (val: string) => void }) {
+  const inputCls = 'w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-400'
   const label = (
-    <label className="text-sm font-medium text-[var(--foreground)]">
-      {field.label}
-      {field.required ? (
-        <span className="text-red-500 ml-0.5">*</span>
-      ) : (
-        <span className="text-[var(--muted-foreground)] font-normal text-xs ml-1">(opsional)</span>
-      )}
+    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' as const, letterSpacing: '0.08em', marginBottom: 6 }}>
+      {field.label}{field.required ? <span style={{ color: '#f87171', marginLeft: 4 }}>*</span> : <span style={{ fontSize: 11, fontWeight: 400, textTransform: 'none' as const, color: '#94a3b8', marginLeft: 4 }}>(opsional)</span>}
     </label>
   )
+  if (field.type === 'textarea') return <div>{label}<textarea value={value} onChange={e => onChange(e.target.value)} placeholder={field.placeholder ?? ''} rows={3} className={inputCls + ' resize-none'} />{field.helpText && <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>{field.helpText}</p>}</div>
+  if (field.type === 'select' && field.options?.length) return <div>{label}<div style={{ position: 'relative' }}><select value={value} onChange={e => onChange(e.target.value)} className={inputCls + ' appearance-none pr-10'}><option value="">-- Pilih --</option>{field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select><ChevronDown size={16} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} /></div></div>
+  if (field.type === 'currency') return <div>{label}<div style={{ position: 'relative' }}><span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#94a3b8', fontWeight: 600 }}>Rp</span><input type="number" value={value} onChange={e => onChange(e.target.value)} placeholder={field.placeholder ?? '0'} className={inputCls} style={{ paddingLeft: 36 }} /></div></div>
+  if (field.type === 'daterange') { const [from, to] = value.split('|'); return <div>{label}<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}><div><p style={{ fontSize: 12, color: '#94a3b8', marginBottom: 4 }}>Dari</p><input type="date" value={from ?? ''} onChange={e => onChange(`${e.target.value}|${to ?? ''}`)} className={inputCls} /></div><div><p style={{ fontSize: 12, color: '#94a3b8', marginBottom: 4 }}>Sampai</p><input type="date" value={to ?? ''} onChange={e => onChange(`${from ?? ''}|${e.target.value}`)} className={inputCls} /></div></div></div> }
+  if (field.type === 'checkbox') return <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><input type="checkbox" id={field.key} checked={value === 'true'} onChange={e => onChange(e.target.checked ? 'true' : 'false')} style={{ width: 16, height: 16, accentColor: '#185FA5' }} /><label htmlFor={field.key} style={{ fontSize: 14, fontWeight: 500, color: '#0f172a', cursor: 'pointer' }}>{field.label}</label></div>
+  return <div>{label}<input type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'} value={value} onChange={e => onChange(e.target.value)} placeholder={field.placeholder ?? ''} className={inputCls} />{field.helpText && <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>{field.helpText}</p>}</div>
+}
 
-  let input: React.ReactNode
-
-  if (field.type === 'textarea') {
-    input = (
-      <textarea
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={field.placeholder ?? ''}
-        rows={3}
-        className={base + ' resize-none'}
-      />
-    )
-  } else if (field.type === 'select' && field.options?.length) {
-    input = (
-      <div className="relative">
-        <select
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          className={base + ' appearance-none pr-10'}
-        >
-          <option value="">-- Pilih --</option>
-          {field.options.map(opt => (
-            <option key={opt} value={opt}>{opt}</option>
-          ))}
-        </select>
-        <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-[var(--muted-foreground)] pointer-events-none" />
-      </div>
-    )
-  } else if (field.type === 'checkbox') {
-    return (
-      <div className="flex items-center gap-3">
-        <input
-          type="checkbox"
-          id={field.key}
-          checked={value === 'true'}
-          onChange={e => onChange(e.target.checked ? 'true' : 'false')}
-          className="w-4 h-4 rounded border-[var(--border)] accent-[var(--primary)]"
-        />
-        <label htmlFor={field.key} className="text-sm font-medium text-[var(--foreground)] cursor-pointer">
-          {field.label}
-          {!field.required && (
-            <span className="text-[var(--muted-foreground)] font-normal text-xs ml-1">(opsional)</span>
-          )}
-        </label>
-        {field.helpText && <p className="text-xs text-[var(--muted-foreground)]">{field.helpText}</p>}
-      </div>
-    )
-  } else if (field.type === 'daterange') {
-    const [from, to] = value.split('|')
-    return (
-      <div className="space-y-1.5">
-        {label}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <p className="text-xs text-[var(--muted-foreground)] mb-1">Dari</p>
-            <input
-              type="date"
-              value={from ?? ''}
-              onChange={e => onChange(`${e.target.value}|${to ?? ''}`)}
-              className={base}
-            />
-          </div>
-          <div>
-            <p className="text-xs text-[var(--muted-foreground)] mb-1">Sampai</p>
-            <input
-              type="date"
-              value={to ?? ''}
-              onChange={e => onChange(`${from ?? ''}|${e.target.value}`)}
-              className={base}
-            />
-          </div>
-        </div>
-        {field.helpText && <p className="text-xs text-[var(--muted-foreground)]">{field.helpText}</p>}
-      </div>
-    )
-  } else if (field.type === 'currency') {
-    input = (
-      <div className="relative">
-        <span className="absolute left-4 top-3 text-sm text-[var(--muted-foreground)]">Rp</span>
-        <input
-          type="number"
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          placeholder={field.placeholder ?? '0'}
-          className={base + ' pl-10'}
-        />
-      </div>
-    )
-  } else {
-    input = (
-      <input
-        type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={field.placeholder ?? ''}
-        className={base}
-      />
-    )
-  }
-
+function Field({ label, children, required = true, hint }: { label: string; children: React.ReactNode; required?: boolean; hint?: string }) {
   return (
-    <div className="space-y-1.5">
-      {label}
-      {input}
-      {field.helpText && (
-        <p className="text-xs text-[var(--muted-foreground)]">{field.helpText}</p>
-      )}
+    <div>
+      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
+        {label}{required ? <span style={{ color: '#f87171', marginLeft: 4 }}>*</span> : <span style={{ fontSize: 11, fontWeight: 400, textTransform: 'none', color: '#94a3b8', marginLeft: 4 }}>(opsional)</span>}
+      </label>
+      {children}
+      {hint && <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>{hint}</p>}
     </div>
   )
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function NewSubmissionPage() {
   const router = useRouter()
   const { user } = useAuthStore()
-
+  const [step, setStep] = useState(1)
   const [docTypes, setDocTypes] = useState<DocumentType[]>([])
   const [selectedType, setSelectedType] = useState<DocumentType | null>(null)
   const [dynamicData, setDynamicData] = useState<Record<string, string>>({})
-
   const [file, setFile] = useState<File | null>(null)
   const [dragOver, setDragOver] = useState(false)
   const [loading, setLoading] = useState(false)
   const [loadingForms, setLoadingForms] = useState(true)
   const [error, setError] = useState('')
+  const [form, setForm] = useState({ title: '', description: '', vendorCompanyName: '', vendorContactName: '', vendorContactEmail: '', vendorContactPhone: '', referenceNumber: '', documentDate: '', documentValue: '', notes: '', contractNumber: '' })
 
-  const [form, setForm] = useState({
-    title: '',
-    description: '',
-    vendorCompanyName: '',
-    vendorContactName: '',
-    vendorContactEmail: '',
-    vendorContactPhone: '',
-    referenceNumber: '',
-    documentDate: '',
-    documentValue: '',
-    notes: '',
-    contractNumber: '',
-  })
+  const inputCls = 'w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-400'
 
-  // Load forms dari endpoint vendor
   useEffect(() => {
-    setLoadingForms(true)
     api.get('/api/vendor/forms')
-      .then(({ data }) => {
-        const types: DocumentType[] = Array.isArray(data) ? data : []
-        setDocTypes(types)
-        if (types.length > 0) {
-          setSelectedType(types[0])
-          initDynamicData(types[0])
-        }
-      })
+      .then(({ data }) => { const types: DocumentType[] = Array.isArray(data) ? data : []; setDocTypes(types); if (types.length > 0) { setSelectedType(types[0]); initDynamic(types[0]) } })
       .catch(() => setError('Gagal memuat daftar jenis dokumen'))
       .finally(() => setLoadingForms(false))
   }, [])
 
-  // Prefill contact info dari user
   useEffect(() => {
-    if (user) {
-      setForm(f => ({
-        ...f,
-        vendorCompanyName: (user as any).companyName ?? user.fullName,
-        vendorContactName: user.fullName,
-        vendorContactEmail: user.email,
-      }))
-    }
+    if (user) setForm(f => ({ ...f, vendorCompanyName: (user as any).companyName ?? user.fullName, vendorContactName: user.fullName, vendorContactEmail: user.email }))
   }, [user])
 
-  const initDynamicData = (dt: DocumentType) => {
-    const init: Record<string, string> = {}
-    for (const field of dt.schema ?? []) {
-      init[field.key] = field.defaultValue ?? ''
-    }
-    setDynamicData(init)
-  }
+  const initDynamic = (dt: DocumentType) => { const init: Record<string, string> = {}; for (const f of dt.schema ?? []) init[f.key] = f.defaultValue ?? ''; setDynamicData(init) }
+  const handleSelectType = (id: string) => { const dt = docTypes.find(d => d.id === id) ?? null; setSelectedType(dt); if (dt) initDynamic(dt) }
+  const handleFile = (f: File) => { if (f.type !== 'application/pdf') { setError('Hanya file PDF'); return }; if (f.size > 100 * 1024 * 1024) { setError('Maks. 100MB'); return }; setFile(f); setError(''); if (!form.title) setForm(p => ({ ...p, title: f.name.replace('.pdf', '') })) }
 
-  const handleSelectType = (id: string) => {
-    const dt = docTypes.find(d => d.id === id) ?? null
-    setSelectedType(dt)
-    if (dt) initDynamicData(dt)
-  }
-
-  const handleFile = (f: File) => {
-    if (f.type !== 'application/pdf') { setError('Hanya file PDF yang diperbolehkan'); return }
-    if (f.size > 100 * 1024 * 1024) { setError('Ukuran file maksimal 100MB'); return }
-    setFile(f)
-    setError('')
-    if (!form.title) setForm(prev => ({ ...prev, title: f.name.replace('.pdf', '') }))
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setDragOver(false)
-    const f = e.dataTransfer.files[0]
-    if (f) handleFile(f)
-  }
-
-  // Validasi dynamic required fields
-  const validateDynamic = (): string[] => {
-    if (!selectedType?.schema?.length) return []
-    return selectedType.schema
-      .filter(f => f.required && !dynamicData[f.key]?.trim())
-      .map(f => f.label)
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!file) { setError('Upload file PDF terlebih dahulu'); return }
-    if (!form.title || !selectedType) { setError('Judul dan jenis dokumen wajib diisi'); return }
-    if (!form.vendorContactPhone) { setError('Nomor telepon PIC wajib diisi'); return }
-
-    const missingFields = validateDynamic()
-    if (missingFields.length > 0) {
-      setError(`Field wajib belum diisi: ${missingFields.join(', ')}`)
-      return
-    }
-
-    setLoading(true)
-    setError('')
-    try {
-      // Serialize dynamic data ke JSON string
-      const dynamicDataJson = JSON.stringify(dynamicData)
-
-      // Step 1: Create submission
-      const { data: sub } = await api.post('/api/vendor/submissions', {
-        title: form.title,
-        description: form.description || undefined,
-        documentTypeId: selectedType.id,
-        vendorCompanyName: form.vendorCompanyName,
-        vendorContactName: form.vendorContactName,
-        vendorContactEmail: form.vendorContactEmail,
-        vendorContactPhone: form.vendorContactPhone,
-        referenceNumber: form.referenceNumber || undefined,
-        documentDate: form.documentDate || undefined,
-        documentValue: form.documentValue ? parseFloat(form.documentValue) : undefined,
-        notes: form.notes || undefined,
-        contractNumber: form.contractNumber || undefined,
-        dynamicData: dynamicDataJson,
-      })
-
-      // Step 2: Upload PDF
-      const fd = new FormData()
-      fd.append('file', file)
-      await api.post(`/api/vendor/submissions/${sub.id}/upload`, fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-
-      router.push(`/submissions/${sub.id}`)
-    } catch (err: any) {
-      setError(err.response?.data?.error ?? 'Gagal membuat pengajuan')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const inp = (
-    label: string,
-    field: keyof typeof form,
-    opts?: { type?: string; placeholder?: string; required?: boolean; hint?: string }
-  ) => (
-    <div className="space-y-1.5">
-      <label className="text-sm font-medium text-[var(--foreground)]">
-        {label}
-        {opts?.required !== false ? (
-          <span className="text-red-500 ml-0.5">*</span>
-        ) : (
-          <span className="text-[var(--muted-foreground)] font-normal text-xs ml-1">(opsional)</span>
-        )}
-      </label>
-      <input
-        type={opts?.type ?? 'text'}
-        value={form[field]}
-        onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))}
-        placeholder={opts?.placeholder}
-        className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--muted)] text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
-      />
-      {opts?.hint && <p className="text-xs text-[var(--muted-foreground)]">{opts.hint}</p>}
-    </div>
+  const inp = (field: keyof typeof form, placeholder?: string, type = 'text') => (
+    <input type={type} value={form[field]} onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))} placeholder={placeholder} className={inputCls} />
   )
+
+  const validateStep = (s: number) => {
+    setError('')
+    if (s === 1) { if (!file) { setError('Upload file PDF terlebih dahulu'); return false }; if (!selectedType) { setError('Pilih jenis dokumen'); return false } }
+    if (s === 2) { if (!form.title) { setError('Judul dokumen wajib diisi'); return false }; const missing = (selectedType?.schema ?? []).filter(f => f.required && !dynamicData[f.key]?.trim()).map(f => f.label); if (missing.length) { setError(`Field wajib belum diisi: ${missing.join(', ')}`); return false } }
+    if (s === 3) { if (!form.vendorContactPhone) { setError('Nomor telepon PIC wajib diisi'); return false } }
+    return true
+  }
+
+  const next = () => { if (validateStep(step)) setStep(s => Math.min(s + 1, 3)) }
+  const prev = () => { setError(''); setStep(s => Math.max(s - 1, 1)) }
+
+  const handleSubmit = async () => {
+    if (!validateStep(3)) return
+    setLoading(true); setError('')
+    try {
+      const { data: sub } = await api.post('/api/vendor/submissions', { title: form.title, description: form.description || undefined, documentTypeId: selectedType!.id, vendorCompanyName: form.vendorCompanyName, vendorContactName: form.vendorContactName, vendorContactEmail: form.vendorContactEmail, vendorContactPhone: form.vendorContactPhone, referenceNumber: form.referenceNumber || undefined, documentDate: form.documentDate || undefined, documentValue: form.documentValue ? parseFloat(form.documentValue) : undefined, notes: form.notes || undefined, contractNumber: form.contractNumber || undefined, dynamicData: JSON.stringify(dynamicData) })
+      const fd = new FormData(); fd.append('file', file!)
+      await api.post(`/api/vendor/submissions/${sub.id}/upload`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      router.push(`/submissions/${sub.id}`)
+    } catch (err: any) { setError(err.response?.data?.error ?? 'Gagal membuat pengajuan') }
+    finally { setLoading(false) }
+  }
+
+  const cardStyle = { background: '#fff', borderRadius: 16, border: '1px solid #e8edf5', padding: 20, boxShadow: '0 2px 8px rgba(15,23,42,0.04)' }
+  const sectionLabel = { fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' as const, letterSpacing: '0.08em', marginBottom: 16, display: 'block' }
 
   return (
     <Shell>
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <button
-          onClick={() => router.back()}
-          className="p-2 rounded-xl hover:bg-[var(--muted)] text-[var(--muted-foreground)] transition-colors"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h1 className="text-xl font-bold text-[var(--foreground)]">Pengajuan Baru</h1>
-          <p className="text-sm text-[var(--muted-foreground)]">Upload dokumen PDF untuk diverifikasi</p>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        .new-sub * { font-family: 'Plus Jakarta Sans', sans-serif; box-sizing: border-box; }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .step-content { animation: fadeUp 0.25s ease both; }
+        .nav-btn { transition: all 0.18s ease; }
+        .nav-btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.05); }
+        .upload-zone:hover { border-color: #185FA5 !important; background: #f0f7ff !important; }
+      `}</style>
+
+      <div className="new-sub" style={{ maxWidth: 620, margin: '0 auto' }}>
+
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+          <button onClick={() => router.back()} style={{ width: 36, height: 36, borderRadius: 10, border: '1px solid #e2e8f0', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b', flexShrink: 0 }}>
+            <ChevronLeft size={18} />
+          </button>
+          <div>
+            <h1 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>Pengajuan Baru</h1>
+            <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 2, fontWeight: 500 }}>Lengkapi informasi dokumen yang akan diajukan</p>
+          </div>
+        </div>
+
+        {/* Stepper */}
+        <div style={{ display: 'flex', alignItems: 'center', background: '#fff', borderRadius: 16, padding: '16px 20px', border: '1px solid #e8edf5', boxShadow: '0 2px 8px rgba(15,23,42,0.04)', marginBottom: 20 }}>
+          {STEPS.map((s, i) => {
+            const done = step > s.id; const active = step === s.id; const Icon = s.icon
+            return (
+              <div key={s.id} style={{ display: 'flex', alignItems: 'center', flex: i < STEPS.length - 1 ? 1 : 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: done || active ? '#185FA5' : '#f1f5f9', color: done || active ? '#fff' : '#94a3b8', transition: 'all 0.3s ease' }}>
+                    {done ? <CheckCircle size={16} /> : <Icon size={15} />}
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: active ? 700 : 500, color: active ? '#0f172a' : done ? '#185FA5' : '#94a3b8', whiteSpace: 'nowrap' }}>{s.label}</span>
+                </div>
+                {i < STEPS.length - 1 && <div style={{ flex: 1, height: 2, margin: '0 12px', background: step > s.id ? '#185FA5' : '#e8edf5', borderRadius: 2, transition: 'background 0.3s ease' }} />}
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', borderRadius: 12, padding: '12px 16px', fontSize: 13, marginBottom: 16 }}>
+            <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />{error}
+          </div>
+        )}
+
+        {/* Step 1 */}
+        {step === 1 && (
+          <div className="step-content" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={cardStyle}>
+              <span style={sectionLabel}>Upload PDF</span>
+              {!file ? (
+                <div className="upload-zone" onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }} onDragOver={e => { e.preventDefault(); setDragOver(true) }} onDragLeave={() => setDragOver(false)} onClick={() => document.getElementById('fileInput')?.click()}
+                  style={{ border: `2px dashed ${dragOver ? '#185FA5' : '#cbd5e1'}`, borderRadius: 14, padding: '36px 24px', textAlign: 'center', cursor: 'pointer', background: dragOver ? '#f0f7ff' : '#fafbfc', transition: 'all 0.2s ease' }}>
+                  <div style={{ width: 52, height: 52, borderRadius: 14, background: 'linear-gradient(135deg, #eff6ff, #dbeafe)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+                    <Upload size={22} style={{ color: '#185FA5' }} />
+                  </div>
+                  <p style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, margin: 0 }}>Seret file PDF ke sini</p>
+                  <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>atau <span style={{ color: '#185FA5', fontWeight: 600 }}>klik untuk memilih</span></p>
+                  <div style={{ display: 'inline-block', background: '#f1f5f9', borderRadius: 20, padding: '4px 12px', marginTop: 12 }}>
+                    <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>PDF · Maks. 100MB</span>
+                  </div>
+                  <input id="fileInput" type="file" accept=".pdf" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: '#f0f7ff', border: '1px solid #bfdbfe', borderRadius: 14 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <FileText size={20} style={{ color: '#185FA5' }} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</p>
+                    <p style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{formatFileSize(file.size)}</p>
+                  </div>
+                  <button type="button" onClick={() => setFile(null)} style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: '#bfdbfe', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#185FA5' }}>
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div style={cardStyle}>
+              <span style={sectionLabel}>Jenis Dokumen</span>
+              {loadingForms ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#94a3b8', fontSize: 13 }}>
+                  <Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} /> Memuat...
+                </div>
+              ) : (
+                <>
+                  <div style={{ position: 'relative' }}>
+                    <select value={selectedType?.id ?? ''} onChange={e => handleSelectType(e.target.value)} style={{ width: '100%', padding: '12px 40px 12px 16px', borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff', fontSize: 14, color: '#0f172a', fontWeight: 600, outline: 'none', appearance: 'none', fontFamily: 'Plus Jakarta Sans, sans-serif', cursor: 'pointer' }}>
+                      {docTypes.map(dt => <option key={dt.id} value={dt.id}>{dt.name} ({dt.code})</option>)}
+                    </select>
+                    <ChevronDown size={16} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                  </div>
+                  {selectedType?.description && <p style={{ fontSize: 12, color: '#64748b', background: '#f8fafc', borderRadius: 10, padding: '8px 12px', marginTop: 10 }}>{selectedType.description}</p>}
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Step 2 */}
+        {step === 2 && (
+          <div className="step-content" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {selectedType?.schema && selectedType.schema.length > 0 && (
+              <div style={cardStyle}>
+                <span style={sectionLabel}>Detail — {selectedType.name}</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {selectedType.schema.sort((a, b) => a.order - b.order).map(field => (
+                    <DynamicField key={field.key} field={field} value={dynamicData[field.key] ?? ''} onChange={val => setDynamicData(d => ({ ...d, [field.key]: val }))} />
+                  ))}
+                </div>
+              </div>
+            )}
+            <div style={cardStyle}>
+              <span style={sectionLabel}>Informasi Umum</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <Field label="Judul Dokumen"><input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Judul dokumen yang diajukan" className={inputCls} /></Field>
+                <Field label="Deskripsi" required={false}><textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Deskripsi singkat dokumen" rows={3} className={inputCls + ' resize-none'} /></Field>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <Field label="Nomor Referensi" required={false}>{inp('referenceNumber', 'No. PO / Kontrak')}</Field>
+                  <Field label="Nomor Kontrak" required={false}>{inp('contractNumber', 'Nomor kontrak')}</Field>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <Field label="Tanggal Dokumen" required={false}>{inp('documentDate', '', 'date')}</Field>
+                  <Field label="Nilai Dokumen (IDR)" required={false} hint="Dalam Rupiah">
+                    <div style={{ position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#94a3b8', fontWeight: 600 }}>Rp</span>
+                      <input type="number" value={form.documentValue} onChange={e => setForm(f => ({ ...f, documentValue: e.target.value }))} placeholder="0" className={inputCls} style={{ paddingLeft: 36 }} />
+                    </div>
+                  </Field>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3 */}
+        {step === 3 && (
+          <div className="step-content" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={cardStyle}>
+              <span style={sectionLabel}>Informasi Kontak</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <Field label="Nama Perusahaan">{inp('vendorCompanyName', 'PT. Nama Perusahaan')}</Field>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <Field label="Nama PIC">{inp('vendorContactName', 'Nama penanggung jawab')}</Field>
+                  <Field label="No. Telepon PIC">{inp('vendorContactPhone', '08xxxxxxxxxx')}</Field>
+                </div>
+                <Field label="Email PIC">{inp('vendorContactEmail', 'email@perusahaan.com', 'email')}</Field>
+                <Field label="Catatan" required={false}><textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Catatan tambahan untuk reviewer" rows={3} className={inputCls + ' resize-none'} /></Field>
+              </div>
+            </div>
+
+            <div style={{ background: 'linear-gradient(135deg, #f0f7ff, #eff6ff)', borderRadius: 16, border: '1px solid #bfdbfe', padding: 20 }}>
+              <span style={{ ...sectionLabel, color: '#185FA5' }}>Ringkasan Pengajuan</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {[
+                  { icon: <FileText size={13} />, label: 'File', value: file?.name ?? '-' },
+                  { icon: <Hash size={13} />, label: 'Jenis Dokumen', value: selectedType?.name ?? '-' },
+                  { icon: <Building2 size={13} />, label: 'Judul', value: form.title || '-' },
+                ].map(row => (
+                  <div key={row.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                    <div style={{ width: 26, height: 26, borderRadius: 7, background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#185FA5', flexShrink: 0 }}>{row.icon}</div>
+                    <div>
+                      <p style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0 }}>{row.label}</p>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 400 }}>{row.value}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation */}
+        <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
+          {step > 1 && (
+            <button onClick={prev} className="nav-btn" style={{ flex: 1, height: 48, borderRadius: 14, border: '1px solid #e2e8f0', background: '#fff', fontSize: 14, fontWeight: 600, color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+              <ArrowLeft size={16} /> Kembali
+            </button>
+          )}
+          {step < 3 ? (
+            <button onClick={next} className="nav-btn" style={{ flex: 2, height: 48, borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #185FA5, #0e4a85)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 14px rgba(24,95,165,0.3)', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+              Lanjut <ArrowRight size={16} />
+            </button>
+          ) : (
+            <button onClick={handleSubmit} disabled={loading} className="nav-btn" style={{ flex: 2, height: 48, borderRadius: 14, border: 'none', background: loading ? '#94a3b8' : 'linear-gradient(135deg, #185FA5, #0e4a85)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: loading ? 'none' : '0 4px 14px rgba(24,95,165,0.3)', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+              {loading ? <><Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} /> Mengirim...</> : <><Upload size={16} /> Kirim Pengajuan</>}
+            </button>
+          )}
         </div>
       </div>
-
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {error && (
-          <div className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
-            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            {error}
-          </div>
-        )}
-
-        {/* Upload Area */}
-        <div className="bg-[var(--card)] rounded-2xl border border-[var(--border)] p-5">
-          <h2 className="font-semibold text-[var(--foreground)] mb-4 flex items-center gap-2">
-            <Upload className="w-4 h-4 text-[var(--primary)]" /> Upload Dokumen PDF
-          </h2>
-          {!file ? (
-            <div
-              onDrop={handleDrop}
-              onDragOver={e => { e.preventDefault(); setDragOver(true) }}
-              onDragLeave={() => setDragOver(false)}
-              onClick={() => document.getElementById('fileInput')?.click()}
-              className={cn(
-                'border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer',
-                dragOver
-                  ? 'border-[var(--primary)] bg-blue-50'
-                  : 'border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--muted)]'
-              )}
-            >
-              <Upload className="w-10 h-10 mx-auto text-[var(--muted-foreground)] mb-3" />
-              <p className="font-medium text-[var(--foreground)] text-sm">Seret file PDF ke sini</p>
-              <p className="text-xs text-[var(--muted-foreground)] mt-1">atau klik untuk memilih file</p>
-              <p className="text-xs text-[var(--muted-foreground)] mt-3">PDF · Maks. 100MB</p>
-              <input id="fileInput" type="file" accept=".pdf" className="hidden"
-                onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
-            </div>
-          ) : (
-            <div className="flex items-center gap-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-              <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
-                <FileText className="w-6 h-6 text-blue-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm text-[var(--foreground)] truncate">{file.name}</p>
-                <p className="text-xs text-[var(--muted-foreground)] mt-0.5">{formatFileSize(file.size)}</p>
-              </div>
-              <button type="button" onClick={() => setFile(null)}
-                className="p-2 rounded-lg hover:bg-blue-100 text-blue-600 transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Pilih Jenis Dokumen */}
-        <div className="bg-[var(--card)] rounded-2xl border border-[var(--border)] p-5 space-y-4">
-          <h2 className="font-semibold text-[var(--foreground)] flex items-center gap-2">
-            <FileText className="w-4 h-4 text-[var(--primary)]" /> Jenis Dokumen
-          </h2>
-
-          {loadingForms ? (
-            <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)] py-2">
-              <Loader2 className="w-4 h-4 animate-spin" /> Memuat daftar dokumen...
-            </div>
-          ) : (
-            <div className="relative">
-              <select
-                value={selectedType?.id ?? ''}
-                onChange={e => handleSelectType(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--muted)] text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all appearance-none pr-10"
-              >
-                {docTypes.map(dt => (
-                  <option key={dt.id} value={dt.id}>
-                    {dt.name} ({dt.code})
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-[var(--muted-foreground)] pointer-events-none" />
-            </div>
-          )}
-
-          {selectedType?.description && (
-            <p className="text-xs text-[var(--muted-foreground)] bg-[var(--muted)] rounded-lg px-3 py-2">
-              {selectedType.description}
-            </p>
-          )}
-        </div>
-
-        {/* Dynamic Fields dari MetaSchema */}
-        {selectedType?.schema && selectedType.schema.length > 0 && (
-          <div className="bg-[var(--card)] rounded-2xl border border-[var(--border)] p-5 space-y-4">
-            <h2 className="font-semibold text-[var(--foreground)] flex items-center gap-2">
-              <FileText className="w-4 h-4 text-[var(--primary)]" /> Detail Dokumen
-              <span className="text-xs font-normal text-[var(--muted-foreground)] ml-1">
-                — {selectedType.name}
-              </span>
-            </h2>
-            {selectedType.schema
-              .sort((a, b) => a.order - b.order)
-              .map(field => (
-                <DynamicField
-                  key={field.key}
-                  field={field}
-                  value={dynamicData[field.key] ?? ''}
-                  onChange={val => setDynamicData(d => ({ ...d, [field.key]: val }))}
-                />
-              ))}
-          </div>
-        )}
-
-        {/* Informasi Umum */}
-        <div className="bg-[var(--card)] rounded-2xl border border-[var(--border)] p-5 space-y-4">
-          <h2 className="font-semibold text-[var(--foreground)] flex items-center gap-2">
-            <FileText className="w-4 h-4 text-[var(--primary)]" /> Informasi Umum
-          </h2>
-          {inp('Judul Dokumen', 'title', { placeholder: 'Judul dokumen yang diajukan' })}
-          {inp('Deskripsi', 'description', { required: false, placeholder: 'Deskripsi singkat dokumen' })}
-          {inp('Nomor Referensi', 'referenceNumber', { required: false, placeholder: 'No. PO / Kontrak / Referensi' })}
-          {inp('Nomor Kontrak', 'contractNumber', { required: false, placeholder: 'Nomor kontrak terkait' })}
-          {inp('Tanggal Dokumen', 'documentDate', { type: 'date', required: false })}
-          {inp('Nilai Dokumen (IDR)', 'documentValue', { type: 'number', required: false, placeholder: '0', hint: 'Dalam Rupiah (IDR)' })}
-        </div>
-
-        {/* Informasi Kontak */}
-        <div className="bg-[var(--card)] rounded-2xl border border-[var(--border)] p-5 space-y-4">
-          <h2 className="font-semibold text-[var(--foreground)] flex items-center gap-2">
-            <FileText className="w-4 h-4 text-[var(--primary)]" /> Informasi Kontak
-          </h2>
-          {inp('Nama Perusahaan', 'vendorCompanyName', { placeholder: 'PT. Nama Perusahaan' })}
-          {inp('Nama PIC', 'vendorContactName', { placeholder: 'Nama penanggung jawab' })}
-          {inp('Email PIC', 'vendorContactEmail', { type: 'email', placeholder: 'email@perusahaan.com' })}
-          {inp('No. Telepon PIC', 'vendorContactPhone', { placeholder: '08xxxxxxxxxx', hint: 'Untuk konfirmasi dan notifikasi' })}
-          {inp('Catatan', 'notes', { required: false, placeholder: 'Catatan tambahan untuk reviewer' })}
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading || !file}
-          className={cn(
-            'w-full py-4 rounded-2xl font-semibold text-white transition-all shadow-md',
-            'bg-[var(--primary)] hover:bg-blue-700 active:scale-[0.99]',
-            'disabled:opacity-50 disabled:cursor-not-allowed',
-            'flex items-center justify-center gap-2'
-          )}
-        >
-          {loading ? (
-            <><Loader2 className="w-5 h-5 animate-spin" /> Mengirim...</>
-          ) : (
-            <><Upload className="w-5 h-5" /> Kirim Pengajuan</>
-          )}
-        </button>
-      </form>
     </Shell>
   )
 }
