@@ -16,3 +16,24 @@ Login dengan:
 
 Internal/Admin → sysadmin@dtc.local / SysAdmin@123
 Vendor → vendor@majujaya.com / Vendor@123
+
+---
+
+## 📋 Tata Cara Penggunaan CODESPACE.md
+
+`CODESPACE.md` berisi referensi lengkap project ini — status fitur, roadmap, environment variables, dan key files.
+
+### Update & simpan status pekerjaan terbaru:
+```bash
+bash save.sh "feat: deskripsi perubahan"
+```
+Script ini otomatis:
+1. Update `CODESPACE.md` (timestamp, last commit, status submodule)
+2. Commit & push `frontend` (Internal Portal)
+3. Commit & push `frontend-vendor` (Vendor Portal)
+4. Commit & push root repo `dtc-sys`
+
+### Untuk melanjutkan pekerjaan di sesi / chat baru:
+1. Buka `CODESPACE.md` di repo
+2. Copy seluruh isinya
+3. Paste ke chat AI baru sebagai konteks awal
