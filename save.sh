@@ -13,6 +13,41 @@ echo -e "${GREEN}======================================${NC}"
 echo -e "Message: ${YELLOW}$MSG${NC}"
 echo ""
 
+# Update CODESPACE.md dulu
+echo -e "${GREEN}[0/3]${NC} Updating CODESPACE.md..."
+python3 << 'PYEOF'
+import subprocess, datetime, re
+
+def run(cmd):
+    try:
+        return subprocess.check_output(cmd, shell=True, text=True, stderr=subprocess.DEVNULL).strip()
+    except:
+        return ""
+
+try:
+    with open('CODESPACE.md', 'r') as f:
+        content = f.read()
+
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    last_commit = run("git log -1 --pretty='%h — %s (%ad)' --date=format:'%Y-%m-%d'")
+    fe_commit   = run("cd frontend && git log -1 --pretty='%h — %s'")
+    fev_commit  = run("cd frontend-vendor && git log -1 --pretty='%h — %s'")
+
+    content = re.sub(r'> Generated: .*', f'> Generated: {now}', content)
+    content = re.sub(r'\| Last Commit \| .* \|', f'| Last Commit | {last_commit} |', content)
+    content = re.sub(r'(\| frontend \| `main` \| ).*( \|)', f'\\g<1>{fe_commit}\\2', content)
+    content = re.sub(r'(\| frontend-vendor \| `main` \| ).*( \|)', f'\\g<1>{fev_commit}\\2', content)
+
+    with open('CODESPACE.md', 'w') as f:
+        f.write(content)
+
+    print("  ✓ CODESPACE.md updated")
+except Exception as e:
+    print(f"  ℹ CODESPACE.md skip: {e}")
+PYEOF
+
+echo ""
+
 # Submodule: frontend
 echo -e "${GREEN}[1/3]${NC} frontend (Internal Portal)..."
 cd frontend
@@ -48,4 +83,5 @@ else
 fi
 
 echo ""
-echo -e "${GREEN}✓ Done!${NC}"
+echo -e "${GREEN}✓ All saved & pushed!${NC}"
+echo -e "Message: ${YELLOW}$MSG${NC}"
