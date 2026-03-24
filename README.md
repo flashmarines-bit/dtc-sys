@@ -25,7 +25,7 @@ Vendor → vendor@majujaya.com / Vendor@123
 
 ### Update & simpan status pekerjaan terbaru:
 ```bash
-bash save.sh "feat: deskripsi perubahan"
+ bash save.sh "feat:deskripsi perubahan"
 ```
 Script ini otomatis:
 1. Update `CODESPACE.md` (timestamp, last commit, status submodule)
