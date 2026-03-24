@@ -1,5 +1,5 @@
 # DTC System — Codespace Reference
-> Generated: 2026-03-24 03:31
+> Generated: 2026-03-24 04:44
 > **Untuk dipakai sebagai context di chat AI baru (Claude / ChatGPT)**
 
 ---
@@ -10,7 +10,7 @@
 | Codespace Name | `cuddly-enigma-69667jq5vvgq24gp9` |
 | Repo | https://github.com/flashmarines-bit/dtc-sys |
 | Branch | main |
-| Last Commit | f1dfb322 — feat: login redesign + forgot/reset password + CODESPACE.md (2026-03-24) |
+| Last Commit | 8e697fa4 — docs: add usage guide to README.md (2026-03-24) |
 | Path | `/workspaces/dtc-sys` |
 
 ---
@@ -97,7 +97,7 @@ bash save.sh "message"       # Commit & push semua (root + submodules)
 | Submodule | Branch | Last Commit |
 |-----------|--------|-------------|
 | frontend | `main` | a412a7c — feat: redesign login page (forest deep) + IT Support configurable setting |
-| frontend-vendor | `main` | f1dfb322 — feat: login redesign + forgot/reset password + CODESPACE.md |
+| frontend-vendor | `main` | 8e697fa4 — docs: add usage guide to README.md |
 
 ---
 

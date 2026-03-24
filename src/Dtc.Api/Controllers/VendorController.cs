@@ -163,4 +163,65 @@ public class VendorController : ControllerBase
         });
     }
 
+
+    /// <summary>
+    /// List DocumentType yang tersedia untuk vendor (ApplicableModules = All atau Module3)
+    /// Digunakan di /submissions/new untuk render form picker
+    /// </summary>
+    [HttpGet("forms")]
+    public async Task<IActionResult> GetAvailableForms(
+        [FromServices] IDynamicFormService dynamicForm)
+    {
+        var docTypes = await _db.DocumentTypes
+            .Where(d => !d.IsDeleted && d.IsActive &&
+                (d.ApplicableModules == "All" ||
+                 d.ApplicableModules == "Module3" ||
+                 (d.ApplicableModules != null && d.ApplicableModules.Contains("Module3"))))
+            .OrderBy(d => d.Name)
+            .ToListAsync();
+
+        var result = new List<object>();
+        foreach (var dt in docTypes)
+        {
+            var schema = string.IsNullOrEmpty(dt.MetaSchema)
+                ? new List<MetaSchemaField>()
+                : System.Text.Json.JsonSerializer.Deserialize<List<MetaSchemaField>>(
+                    dt.MetaSchema,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                  ?? new List<MetaSchemaField>();
+
+            result.Add(new
+            {
+                id = dt.Id,
+                name = dt.Name,
+                code = dt.Code,
+                description = dt.Description,
+                numberingFormat = dt.NumberingFormat,
+                applicableModules = dt.ApplicableModules,
+                schema = schema.OrderBy(f => f.Order).ToList()
+            });
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Get satu DocumentType dengan schema lengkap (untuk render form fields)
+    /// </summary>
+    [HttpGet("forms/{id:guid}")]
+    public async Task<IActionResult> GetFormById(Guid id,
+        [FromServices] IDynamicFormService dynamicForm)
+    {
+        var result = await dynamicForm.GetDocumentTypeWithSchemaAsync(id);
+        if (result is null) return NotFound(new { error = "Form not found." });
+
+        // Pastikan form ini applicable untuk vendor
+        if (result.ApplicableModules != "All" &&
+            result.ApplicableModules != "Module3" &&
+            !(result.ApplicableModules?.Contains("Module3") ?? false))
+            return Forbid();
+
+        return Ok(result);
+    }
+
 }
